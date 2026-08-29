@@ -13,3 +13,10 @@ export interface Document {
   source: string;
   metadata: DocumentMetadata;
 }
+
+export interface DocumentSection {
+  title: string;
+  level: number;
+  content: string;
+  children: DocumentSection[];
+}
