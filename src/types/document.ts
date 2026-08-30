@@ -1,7 +1,7 @@
-export type sourceType="markdown" | "pdf" | "docx" | "html" | "text"
+export type SourceType="markdown" | "pdf" | "docx" | "html" | "text"
 
 export interface DocumentMetadata {
-  sourceType:sourceType;
+  sourceType:SourceType;
   fileName?: string;
   mimeType?: string;
 }
