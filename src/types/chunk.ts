@@ -10,3 +10,7 @@ export interface Chunk {
   content: string;
   metadata: ChunkMetadata;
 }
+
+export interface EmbeddedChunk extends Chunk{
+  embedding:number[]
+}
