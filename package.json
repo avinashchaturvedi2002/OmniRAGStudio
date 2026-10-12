@@ -7,7 +7,8 @@
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "evaluate": "tsx src/evaluation/evaluate-retrieval.ts"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +31,7 @@
   "dependencies": {
     "dotenv": "^17.4.2",
     "mongodb": "^7.6.0",
+    "openai": "^7.32.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5"

@@ -1,25 +1,39 @@
+
 import type { Chunk, EmbeddedChunk } from "../types/chunk.js";
 import type { EmbeddingProvider } from "./embedding-provider.js";
 
-export async function embedChunks(chunks:Chunk[],provider:EmbeddingProvider):Promise<EmbeddedChunk[]>{
-    const texts=chunks.map(chunk=>createEmbeddingText(chunk.metadata.headingPath,chunk.content))
-    const embeddings=await provider.embedDocuments(texts);
-    return chunks.map((chunk,index)=>{
-        const embedding=embeddings[index];
-        if (!embedding) {
+export async function embedChunks(
+  chunks: Chunk[],
+  provider: EmbeddingProvider,
+  model = "nano-em1"
+): Promise<EmbeddedChunk[]> {
+  if (chunks.length === 0) {
+    return [];
+  }
+
+  const texts = chunks.map((chunk) => {
+    const headingPath = chunk.metadata.headingPath.join(" > ");
+    return `${headingPath}\n\n${chunk.content}`;
+  });
+
+  const embeddings = await provider.embedBatch(texts, model);
+
+  if (embeddings.length !== chunks.length) {
     throw new Error(
-        `Missing embedding for chunk at index ${index}`
+      `Expected ${chunks.length} embeddings, received ${embeddings.length}`
     );
-}
-        return {...chunk,
-            embedding
-        }
-    })
-}
+  }
 
-function createEmbeddingText(heading:string[],content:string):string{
-    const headingPath=heading.join(">");
-    return `${headingPath}\n\n${content}`
-    
-}
+  return chunks.map((chunk, index) => {
+    const embedding = embeddings[index];
 
+    if (embedding === undefined) {
+      throw new Error(`Missing embedding for chunk at index ${index}`);
+    }
+
+    return {
+      ...chunk,
+      embedding,
+    };
+  });
+}

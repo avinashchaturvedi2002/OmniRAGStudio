@@ -2,3 +2,4 @@ uvicorn
 torch
 transformers
 fastapi
+sentence-transformers

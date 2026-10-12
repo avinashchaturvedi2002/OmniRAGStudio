@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-
+from sentence_transformers import CrossEncoder
 from model import NanoEm1Model
 
 
@@ -18,6 +18,10 @@ app = FastAPI(
 # --------------------------------------------------
 
 embedding_model = NanoEm1Model()
+reranker_model = CrossEncoder(
+    "cross-encoder/ms-marco-MiniLM-L12-v2"
+)
+
 
 
 # --------------------------------------------------
@@ -28,7 +32,9 @@ class EmbeddingRequest(BaseModel):
     texts: list[str]
     is_query: bool = False
 
-
+class RerankRequest(BaseModel):
+    query: str
+    documents: list[str]
 # --------------------------------------------------
 # 4. Embedding endpoint
 # --------------------------------------------------
@@ -72,3 +78,46 @@ def embed(request: EmbeddingRequest):
         "embeddings": embeddings.tolist()
     }
 
+@app.post("/rerank")
+def rerank(request: RerankRequest):
+
+    # Validate request
+    if not request.query.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="query cannot be empty",
+        )
+
+    if not request.documents:
+        raise HTTPException(
+            status_code=400,
+            detail="documents cannot be empty",
+        )
+
+    # Create query-document pairs
+    pairs = [
+        (request.query, document)
+        for document in request.documents
+    ]
+
+    # Get relevance scores
+    scores = reranker_model.predict(pairs)
+
+    # Attach original document index
+    results = [
+        {
+            "index": i,
+            "score": float(score),
+        }
+        for i, score in enumerate(scores)
+    ]
+
+    # Highest relevance first
+    results.sort(
+        key=lambda x: x["score"],
+        reverse=True,
+    )
+
+    return {
+        "results": results
+    }

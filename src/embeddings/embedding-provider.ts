@@ -1,11 +1,4 @@
-export interface EmbeddingProvider {
-
-  embedDocuments(
-    texts: string[]
-  ): Promise<number[][]>;
-
-  embedQuery(
-    text: string
-  ): Promise<number[]>;
-
+export interface EmbeddingProvider{
+    embed(text:string,model:string):Promise<number[]>;
+    embedBatch(texts:string[],model:string):Promise<number[][]>;
 }
