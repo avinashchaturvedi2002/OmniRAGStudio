@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "evaluate": "tsx src/evaluation/evaluate-retrieval.ts"
+    "evaluate": "tsx src/evaluation/evaluate-retrieval.ts",
+    "dev:api": "tsx src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +24,7 @@
   "packageManager": "pnpm@11.23.0",
   "type": "module",
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/mdast": "^4.0.4",
     "@types/node": "^26.2.0",
     "tsx": "^4.23.12",
@@ -30,6 +32,7 @@
   },
   "dependencies": {
     "dotenv": "^17.4.2",
+    "express": "^5.3.0",
     "mongodb": "^7.6.0",
     "openai": "^7.32.0",
     "remark-gfm": "^4.0.1",
