@@ -11,6 +11,8 @@ import { LlmReranker } from "./reranking/llm-reranker.js";
 import { OllamaClient } from "./llm/ollama-client.js";
 import { AnswerGenerator } from "./llm/answer-generator.js";
 import { RagService } from "./retrieval/rag-service.js";
+import { IngestionService } from "./ingestion/ingestion-service.js";
+import { createIngestionRouter } from "./routes/ingestions.routes.js";
 
 const app = express();
 
@@ -45,6 +47,16 @@ async function startServer() {
     answerGenerator,
     20
   );
+
+  const ingestionService = new IngestionService(
+  provider,
+  repository
+);
+
+app.use(
+  "/api/knowledge-bases",
+  createIngestionRouter(ingestionService)
+);
 
   app.post("/api/chat", async (req, res) => {
     const { query } = req.body ?? {};

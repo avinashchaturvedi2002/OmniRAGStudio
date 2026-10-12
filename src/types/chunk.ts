@@ -7,6 +7,7 @@ export interface ChunkMetadata {
 export interface Chunk {
   id: string;
   documentId: string;
+  knowledgeBaseId: string;
   content: string;
   metadata: ChunkMetadata;
 }

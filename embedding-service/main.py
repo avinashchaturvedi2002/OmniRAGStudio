@@ -1,4 +1,8 @@
-from fastapi import FastAPI, HTTPException
+import os
+import tempfile
+from pathlib import Path
+from markitdown import MarkItDown
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from pydantic import BaseModel
 from sentence_transformers import CrossEncoder
 from model import NanoEm1Model
@@ -121,3 +125,76 @@ def rerank(request: RerankRequest):
     return {
         "results": results
     }
+
+markdown_converter = MarkItDown(enable_plugins=False)
+
+SUPPORTED_EXTENSIONS = {
+    ".pdf", ".docx", ".pptx", ".xlsx", ".xls",
+    ".html", ".htm", ".txt", ".md", ".markdown",
+    ".csv", ".json", ".xml", ".epub",
+}
+
+MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
+
+@app.post("/convert")
+async def convert_to_markdown(file: UploadFile = File(...)):
+    filename = Path(file.filename or "upload").name
+    extension = Path(filename).suffix.lower()
+
+    if extension not in SUPPORTED_EXTENSIONS:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported file type: {extension}",
+        )
+
+    contents = await file.read()
+
+    if not contents:
+        raise HTTPException(status_code=400, detail="Empty file")
+
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail="File exceeds the 20 MB limit",
+        )
+
+    temp_path = None
+
+    try:
+        with tempfile.NamedTemporaryFile(
+            suffix=extension,
+            delete=False,
+        ) as temp_file:
+            temp_file.write(contents)
+            temp_path = temp_file.name
+
+        result = markdown_converter.convert(temp_path)
+        markdown = result.markdown
+
+        if not markdown or not markdown.strip():
+            raise HTTPException(
+                status_code=422,
+                detail="No readable content found in the document",
+            )
+
+        return {
+            "fileName": filename,
+            "mimeType": file.content_type,
+            "markdown": markdown,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        # Log the detailed exception server-side in production.
+        raise HTTPException(
+            status_code=422,
+            detail="Could not convert this document",
+        ) from exc
+    finally:
+        if temp_path:
+            try:
+                os.unlink(temp_path)
+            except OSError:
+                pass
+        await file.close()
