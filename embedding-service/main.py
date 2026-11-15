@@ -1,11 +1,15 @@
 import os
 import tempfile
+import logging
 from pathlib import Path
 from markitdown import MarkItDown
-from fastapi import FastAPI, HTTPException, File, UploadFile
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from pydantic import BaseModel
 from sentence_transformers import CrossEncoder
 from model import NanoEm1Model
+from starlette.concurrency import run_in_threadpool
+from docling_parser import parse_with_docling
+from conversion_pipeline import convert_and_validate_file, convert_scanned_notice_to_markdown
 
 
 # --------------------------------------------------
@@ -129,15 +133,30 @@ def rerank(request: RerankRequest):
 markdown_converter = MarkItDown(enable_plugins=False)
 
 SUPPORTED_EXTENSIONS = {
-    ".pdf", ".docx", ".pptx", ".xlsx", ".xls",
-    ".html", ".htm", ".txt", ".md", ".markdown",
-    ".csv", ".json", ".xml", ".epub",
+    ".pdf",
+    ".jpeg",
+    ".jpg",
+    ".png",
+    ".tiff",
+    ".bmp",
+    ".docx",
+    ".pptx",
+    ".xlsx",
+    ".html",
+    ".txt",
+    ".md",
+    ".csv",
 }
+
 
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
 
 @app.post("/convert")
-async def convert_to_markdown(file: UploadFile = File(...)):
+async def convert_to_markdown(
+    file: UploadFile = File(...),
+    strategy: str = Form("auto"),
+    provider: str = Form("auto"),
+):
     filename = Path(file.filename or "upload").name
     extension = Path(filename).suffix.lower()
 
@@ -168,6 +187,26 @@ async def convert_to_markdown(file: UploadFile = File(...)):
             temp_file.write(contents)
             temp_path = temp_file.name
 
+        # For scanned PDFs, images, or when requested, use the enhanced notice conversion pipeline
+        if strategy in {"vision_llm", "auto", "docling"} or extension in {".pdf", ".png", ".jpg", ".jpeg"}:
+            res = await run_in_threadpool(
+                convert_scanned_notice_to_markdown,
+                temp_path,
+                filename,
+                extension,
+                strategy,
+                provider,
+            )
+            return {
+                "fileName": filename,
+                "mimeType": file.content_type,
+                "markdown": res["markdown"],
+                "strategy": res.get("strategyUsed", strategy),
+                "pageCount": res.get("pageCount", 1),
+                "warnings": res.get("warnings", []),
+            }
+
+        # Fallback to standard MarkItDown for digital office docs
         result = markdown_converter.convert(temp_path)
         markdown = result.markdown
 
@@ -181,15 +220,16 @@ async def convert_to_markdown(file: UploadFile = File(...)):
             "fileName": filename,
             "mimeType": file.content_type,
             "markdown": markdown,
+            "strategy": "markitdown",
         }
 
     except HTTPException:
         raise
     except Exception as exc:
-        # Log the detailed exception server-side in production.
+        logger.exception("Conversion failed for %s: %s", filename, exc)
         raise HTTPException(
             status_code=422,
-            detail="Could not convert this document",
+            detail=f"Could not convert document: {str(exc)}",
         ) from exc
     finally:
         if temp_path:
@@ -198,3 +238,150 @@ async def convert_to_markdown(file: UploadFile = File(...)):
             except OSError:
                 pass
         await file.close()
+
+
+@app.post("/parse")
+async def parse_document(file: UploadFile = File(...)):
+    filename = Path(file.filename or "upload.bin").name
+    extension = Path(filename).suffix.lower()
+
+    if extension not in SUPPORTED_EXTENSIONS:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported file type: {extension}",
+        )
+
+    contents = await file.read(MAX_FILE_SIZE + 1)
+
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail="File exceeds the 20 MB limit",
+        )
+
+    if not contents:
+        raise HTTPException(
+            status_code=400,
+            detail="Uploaded file is empty",
+        )
+
+    temp_path = None
+
+    try:
+        with tempfile.NamedTemporaryFile(
+            suffix=extension, delete=False
+        ) as temp_file:
+            temp_file.write(contents)
+            temp_path = temp_file.name
+
+        markdown = await run_in_threadpool(
+            parse_with_docling, temp_path
+        )
+
+        return {
+            "fileName": filename,
+            "mimeType": file.content_type,
+            "parser": "docling",
+            "markdown": markdown,
+        }
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Document parsing failed: {str(exc)}",
+        ) from exc
+
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.unlink(temp_path)
+
+logger=logging.getLogger(__name__)
+
+
+CONVERT_VALIDATE_MAX_BYTES = 20 * 1024 * 1024
+
+CONVERT_VALIDATE_EXTENSIONS = {
+    ".pdf",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".bmp",
+    ".tif",
+    ".tiff",
+    ".docx",
+    ".pptx",
+    ".xlsx",
+    ".html",
+    ".htm",
+    ".txt",
+    ".md",
+    ".csv",
+}
+
+
+@app.post("/convert-and-validate")
+async def convert_and_validate_endpoint(
+    file: UploadFile = File(...),
+):
+    filename = Path(
+        file.filename or "upload.bin"
+    ).name
+    extension = Path(filename).suffix.lower()
+
+    if extension not in CONVERT_VALIDATE_EXTENSIONS:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported file type: {extension}",
+        )
+
+    contents = await file.read(
+        CONVERT_VALIDATE_MAX_BYTES + 1
+    )
+
+    if len(contents) > CONVERT_VALIDATE_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail="File exceeds the 20 MB limit",
+        )
+
+    if not contents:
+        raise HTTPException(
+            status_code=400,
+            detail="Uploaded file is empty",
+        )
+
+    temp_path = None
+
+    try:
+        with tempfile.NamedTemporaryFile(
+            suffix=extension,
+            delete=False,
+        ) as temp_file:
+            temp_file.write(contents)
+            temp_path = temp_file.name
+
+        result = await run_in_threadpool(
+            convert_and_validate_file,
+            temp_path,
+            filename,
+            extension,
+        )
+
+        result["mimeType"] = file.content_type
+        return result
+
+    except Exception as exc:
+        logger.exception(
+            "Conversion and validation failed for %s",
+            filename,
+        )
+        raise HTTPException(
+            status_code=502,
+            detail="Document conversion or validation failed. "
+                   "Check the embedding-service logs.",
+        ) from exc
+
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.unlink(temp_path)

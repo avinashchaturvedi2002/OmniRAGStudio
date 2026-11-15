@@ -17,26 +17,32 @@ async rerank(
         return [];
     }
 
-    const prompt = this.buildPrompt(query, results);
-    const response = await this.llm.generate(prompt);
-    const parsed = this.parseResponse(response);
+    try {
+        const prompt = this.buildPrompt(query, results);
+        const response = await this.llm.generate(prompt);
+        const parsed = this.parseResponse(response);
 
-    return parsed.results
-        .filter((result) => result.relevant)
-        .map((result) => {
-            const original = results[result.index];
-
-            if (original === undefined) {
-                throw new Error(
-                    `LLM returned invalid chunk index: ${result.index}`
-                );
+        const filtered: SearchResult[] = [];
+        for (const item of parsed.results) {
+            if (item.relevant) {
+                const original = results[item.index];
+                if (original) {
+                    filtered.push({
+                        ...original,
+                        rerankScore: 1,
+                    });
+                }
             }
+        }
 
-            return {
-                ...original,
-                rerankScore: 1,
-            };
-        });
+        if (filtered.length > 0) {
+            return filtered;
+        }
+    } catch (err: any) {
+        console.warn("LLM reranker failed; falling back to vector candidates:", err.message);
+    }
+
+    return results.slice(0, 5);
 }
 
 

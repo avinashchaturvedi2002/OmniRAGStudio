@@ -1,9 +1,13 @@
-export type SourceType="markdown" | "pdf" | "docx" | "html" | "text"
+export type SourceType = "markdown" | "pdf" | "docx" | "html" | "text" | "image";
+
+export type BlockType = "paragraph" | "list" | "table" | "code" | "quote" | "other";
+export interface Block { type: BlockType; text: string }
 
 export interface DocumentMetadata {
-  sourceType:SourceType;
-  fileName?: string;
-  mimeType?: string;
+  sourceType: SourceType;
+  fileName?: string | undefined;
+  mimeType?: string | undefined;
+  category?: string | undefined;
 }
 
 export interface Document {
@@ -17,6 +21,21 @@ export interface Document {
 export interface DocumentSection {
   title: string;
   level: number;
-  content: string;
+  blocks: Block[];          
   children: DocumentSection[];
+}
+
+export interface DocumentRecord {
+  id: string;
+  knowledgeBaseId: string;
+  title: string;
+  fileName: string;
+  fileSize: number;
+  chunkCount: number;
+  uploadedAt: string;
+  category?: string | undefined;
+  sourceType: SourceType;
+  previewMarkdown?: string | undefined;
+  strategyUsed?: string | undefined;
+  status: "processed" | "failed";
 }

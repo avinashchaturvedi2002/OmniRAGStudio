@@ -3,3 +3,7 @@ torch
 transformers
 fastapi
 sentence-transformers
+docling
+markitdown
+pymupdf
+pillow

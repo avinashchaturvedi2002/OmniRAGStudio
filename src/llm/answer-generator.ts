@@ -48,6 +48,13 @@ ${query}
 ANSWER:
 `.trim();
 
-    return this.llm.generate(prompt);
+    try {
+      return await this.llm.generate(prompt);
+    } catch (err: any) {
+      console.warn("LLM answer generation failed; returning synthesized context answer:", err.message);
+      const topChunk = chunks[0]!;
+      const heading = topChunk.metadata.headingPath.join(" > ");
+      return `According to ${topChunk.metadata.source || "the college notice"} (${heading}):\n\n${topChunk.content}\n\n[SOURCE 1]`;
+    }
   }
 }

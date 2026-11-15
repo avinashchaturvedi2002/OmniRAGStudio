@@ -1,85 +1,85 @@
 import { unified } from "unified";
-import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
-import type {Root, RootContent, Heading, Text,} from "mdast"
-import type { DocumentSection } from "../types/document.js";
+import remarkGfm from "remark-gfm";
+import { toString } from "mdast-util-to-string";
+import type { Root, RootContent } from "mdast";
+import type { Block, BlockType, DocumentSection } from "../types/document.js";
 
-const parser = unified().use(remarkParse).use(remarkGfm)
+const parser = unified().use(remarkParse).use(remarkGfm);
 
-export function parseMarkdown(markdown:string):DocumentSection[]{
-    const tree=parser.parse(markdown)
-    return buildSectionTree(tree);
+function blockType(node: RootContent): BlockType {
+  switch (node.type) {
+    case "paragraph":
+      return "paragraph";
+    case "list":
+      return "list";
+    case "table":
+      return "table";
+    case "code":
+      return "code";
+    case "blockquote":
+      return "quote";
+    default:
+      return "other";
+  }
 }
 
-function buildSectionTree(tree:Root):DocumentSection[]{
-    const sections:DocumentSection[]=[];
-    let currentSection:DocumentSection|null=null;
-    for (const node of tree.children){
-        if(node.type=="heading"){
-            const heading = node as Heading;
-            const title=extractText(heading);
-            const section:DocumentSection={
-                title,
-                level:heading.depth,
-                content:"",
-                children:[]
-            }
-            if(heading.depth===1)
-                sections.push(section);
-            else{
-                const parent=findParent(sections,heading.depth)
-                if(parent)
-                {
-                    parent.children.push(section);
-                }
-                else
-                {
-                    sections.push(section);
-                }
-            }
-            currentSection=section;
-            continue;
-        }
-        if(currentSection)
-        {
-            currentSection.content+=extractNodeText(node)+"\n";
-        }
+/**
+ * Parses markdown into a section tree.
+ *
+ * The returned root is a synthetic level-0 section with an empty title.
+ * Its `blocks` hold any content that appears before the first heading,
+ * and its `children` are the top-level sections.
+ *
+ * Block text is sliced from the original markdown, so tables, lists,
+ * links, bold text and code are preserved exactly as written.
+ */
+export function parseMarkdown(markdown: string): DocumentSection {
+  const tree = parser.parse(markdown) as Root;
+
+  const root: DocumentSection = {
+    title: "",
+    level: 0,
+    blocks: [],
+    children: [],
+  };
+  const stack: DocumentSection[] = [root];
+
+  for (const node of tree.children) {
+    if (node.type === "heading") {
+      const title = toString(node).trim();
+
+      // Empty headings (e.g. "##" with no text) carry no information.
+      if (!title) continue;
+
+      const section: DocumentSection = {
+        title,
+        level: node.depth,
+        blocks: [],
+        children: [],
+      };
+
+      // Pop until the top of the stack is a shallower heading.
+      // This handles skipped levels (H1 -> H3) and level resets.
+      while (stack.length > 1 && (stack[stack.length - 1]?.level ?? 0) >= section.level) {
+        stack.pop();
+      }
+
+      (stack[stack.length - 1] ?? root).children.push(section);
+      stack.push(section);
+      continue;
     }
-return sections;
-}
 
-function findParent(sections:DocumentSection[],level:number):DocumentSection|null
-{
-if(sections.length==0)
-    return null;
- const last=sections[sections.length-1];
- if(last && last.level===level-1)
-    return last;
-return findParent(last?last.children:[],level)
+    const start = node.position?.start.offset;
+    const end = node.position?.end.offset;
+    if (start == null || end == null) continue;
 
-   
-}
+    const text = markdown.slice(start, end).trim();
+    if (!text) continue;
 
-function extractText(node:Heading):string{
-return node.children.filter((child):child is Text=>child.type==="text").map((child)=>child.value).join("")
-}
+    const block: Block = { type: blockType(node), text };
+    (stack[stack.length - 1] ?? root).blocks.push(block);
+  }
 
-function extractNodeText(node:RootContent){
-    if("value" in node){
-        return node.value
-    }
-
-    if("children" in node){
-        return node.children.map((child)=>{
-            if("value" in child) 
-            {
-                return child.value;
-            }
-            return "";
-            
-            
-        }).join("")
-
-    }
-    return "";
+  return root;
 }

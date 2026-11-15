@@ -2,6 +2,9 @@ export interface ChunkMetadata {
   headingPath: string[];
   source: string;
   chunkIndex: number;
+  documentTitle?: string | undefined;
+  category?: string | undefined;
+  uploadedAt?: string | undefined;
 }
 
 export interface Chunk {
@@ -10,8 +13,10 @@ export interface Chunk {
   knowledgeBaseId: string;
   content: string;
   metadata: ChunkMetadata;
+  embedText: string;
+  contentHash: string; 
 }
 
-export interface EmbeddedChunk extends Chunk{
-  embedding:number[]
+export interface EmbeddedChunk extends Chunk {
+  embedding: number[];
 }
