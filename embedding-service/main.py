@@ -156,6 +156,7 @@ async def convert_to_markdown(
     file: UploadFile = File(...),
     strategy: str = Form("auto"),
     provider: str = Form("auto"),
+    prompt: str = Form(None),
 ):
     filename = Path(file.filename or "upload").name
     extension = Path(filename).suffix.lower()
@@ -196,6 +197,7 @@ async def convert_to_markdown(
                 extension,
                 strategy,
                 provider,
+                prompt,
             )
             return {
                 "fileName": filename,

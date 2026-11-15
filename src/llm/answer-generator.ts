@@ -2,13 +2,12 @@ import { OllamaClient } from "./ollama-client.js";
 import type { SearchResult } from "../types/retireval.js";
 
 export class AnswerGenerator {
-  constructor(
-    private readonly llm = new OllamaClient()
-  ) {}
+  constructor(private readonly llm = new OllamaClient()) {}
 
   async generate(
     query: string,
-    chunks: SearchResult[]
+    chunks: SearchResult[],
+    customSystemPrompt?: string
   ): Promise<string> {
     if (chunks.length === 0) {
       return "I couldn't find enough relevant information in the knowledge base to answer that question.";
@@ -17,7 +16,6 @@ export class AnswerGenerator {
     const context = chunks
       .map((chunk, index) => {
         const heading = chunk.metadata.headingPath.join(" > ");
-
         return `
 [SOURCE ${index + 1}]
 Heading: ${heading}
@@ -26,8 +24,12 @@ Content: ${chunk.content}
       })
       .join("\n");
 
+    const persona =
+      customSystemPrompt?.trim() ||
+      "You are a helpful question-answering assistant.";
+
     const prompt = `
-You are a helpful question-answering assistant.
+${persona}
 
 Answer the user's question using only the supplied context.
 
@@ -51,10 +53,13 @@ ANSWER:
     try {
       return await this.llm.generate(prompt);
     } catch (err: any) {
-      console.warn("LLM answer generation failed; returning synthesized context answer:", err.message);
+      console.warn(
+        "LLM answer generation failed; returning synthesized context answer:",
+        err.message
+      );
       const topChunk = chunks[0]!;
       const heading = topChunk.metadata.headingPath.join(" > ");
-      return `According to ${topChunk.metadata.source || "the college notice"} (${heading}):\n\n${topChunk.content}\n\n[SOURCE 1]`;
+      return `Based on ${topChunk.metadata.source || "the knowledge base"} (${heading}):\n\n${topChunk.content}\n\n[SOURCE 1]`;
     }
   }
 }

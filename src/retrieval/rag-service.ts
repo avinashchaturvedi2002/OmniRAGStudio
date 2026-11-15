@@ -25,39 +25,50 @@ export class RagService {
     private readonly topK = 20
   ) {}
 
-  async answer(query: string, knowledgeBaseId?: string): Promise<RagResponse> {
+  async answer(
+    query: string,
+    knowledgeBaseId?: string,
+    projectId?: string,
+    customSystemPrompt?: string
+  ): Promise<RagResponse> {
     if (!query.trim()) {
       throw new Error("Query cannot be empty");
     }
 
-    // 1. Embed the user's query.
+    // 1. Embed the user's query
     const queryEmbedding = await this.provider.embedQuery(query);
 
-    // 2. Retrieve candidate chunks from MongoDB.
+    // 2. Retrieve candidate chunks with strict tenant isolation (projectId)
     const candidates = await this.repository.search(
       queryEmbedding,
       this.topK,
       knowledgeBaseId,
-      query
+      query,
+      projectId
     );
 
     if (candidates.length === 0) {
       return {
-        answer: "I couldn't find any relevant college notices or documents in the database for your query.",
+        answer: "I couldn't find any relevant information in the knowledge base for your query.",
         sources: [],
         retrievedCount: 0,
         relevantCount: 0,
       };
     }
 
-    // 3. Ask the LLM to filter irrelevant chunks (with fallback to candidates).
+    // 3. Filter / rerank candidate chunks
     const relevantChunks = await this.reranker.rerank(query, candidates);
 
-    // 4. Generate an answer using retained chunks.
-    const chunksForAnswer = relevantChunks.length > 0 ? relevantChunks : candidates.slice(0, 5);
-    const answer = await this.answerGenerator.generate(query, chunksForAnswer);
+    // 4. Generate domain-tailored answer using retained chunks
+    const chunksForAnswer =
+      relevantChunks.length > 0 ? relevantChunks : candidates.slice(0, 5);
+    const answer = await this.answerGenerator.generate(
+      query,
+      chunksForAnswer,
+      customSystemPrompt
+    );
 
-    // 5. Return the answer and its supporting sources.
+    // 5. Return answer with citations
     return {
       answer,
       sources: chunksForAnswer.map((chunk) => ({

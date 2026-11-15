@@ -13,6 +13,9 @@ import { embedChunks } from "../embeddings/embed-chunks.js";
 export interface IngestionOptions extends ConversionOptions {
   category?: string | undefined;
   title?: string | undefined;
+  projectId?: string | undefined;
+  userId?: string | undefined;
+  prompt?: string | undefined;
 }
 
 export interface IngestedChunkSummary {
@@ -28,6 +31,7 @@ export interface IngestedChunkSummary {
 
 export interface IngestionResult {
   documentId: string;
+  projectId: string;
   knowledgeBaseId: string;
   fileName: string;
   title: string;
@@ -51,10 +55,13 @@ export class IngestionService {
     knowledgeBaseId: string,
     options?: IngestionOptions
   ): Promise<IngestionResult> {
-    // 1. Convert the uploaded scanned notice / file to Markdown via LLM / OCR
+    const projectId = options?.projectId || "college-demo";
+
+    // 1. Convert the uploaded document/menu/notice to Markdown via LLM with dynamic domain prompt
     const conversion = await convertFileToMarkdown(file, {
       strategy: options?.strategy,
       provider: options?.provider,
+      prompt: options?.prompt,
     });
     const markdown = conversion.markdown;
 
@@ -74,6 +81,7 @@ export class IngestionService {
         fileName: file.originalname,
         mimeType: file.mimetype,
         category: options?.category,
+        projectId,
       },
     };
 
@@ -92,8 +100,10 @@ export class IngestionService {
 
     const uploadedAt = new Date().toISOString();
 
-    // Attach rich metadata to chunks
+    // Attach rich metadata and projectId to each chunk
     for (const chunk of chunks) {
+      chunk.projectId = projectId;
+      chunk.metadata.projectId = projectId;
       chunk.metadata.documentTitle = document.title;
       chunk.metadata.category = options?.category || "General";
       chunk.metadata.uploadedAt = uploadedAt;
@@ -106,12 +116,20 @@ export class IngestionService {
       "nano-em1"
     );
 
+    // Ensure embedded chunks carry the projectId
+    for (const ec of embeddedChunks) {
+      ec.projectId = projectId;
+      ec.metadata.projectId = projectId;
+    }
+
     // 6. Persist the chunks in MongoDB
     await this.repository.insertChunks(embeddedChunks);
 
     // 7. Save document record
     const docRecord: DocumentRecord = {
       id: document.id,
+      projectId,
+      userId: options?.userId,
       knowledgeBaseId,
       title: document.title,
       fileName: file.originalname,
@@ -139,6 +157,7 @@ export class IngestionService {
 
     return {
       documentId: document.id,
+      projectId,
       knowledgeBaseId,
       fileName: file.originalname,
       title: document.title,
@@ -157,9 +176,12 @@ export class IngestionService {
     knowledgeBaseId: string,
     options?: IngestionOptions
   ): Promise<Omit<IngestionResult, "documentId"> & { documentId: string }> {
+    const projectId = options?.projectId || "preview";
+
     const conversion = await convertFileToMarkdown(file, {
       strategy: options?.strategy,
       provider: options?.provider,
+      prompt: options?.prompt,
     });
     const markdown = conversion.markdown;
 
@@ -178,6 +200,7 @@ export class IngestionService {
         fileName: file.originalname,
         mimeType: file.mimetype,
         category: options?.category,
+        projectId,
       },
     };
 
@@ -202,6 +225,7 @@ export class IngestionService {
 
     return {
       documentId: document.id,
+      projectId,
       knowledgeBaseId,
       fileName: file.originalname,
       title: document.title,
@@ -216,7 +240,6 @@ export class IngestionService {
   }
 
   private extractTitleFromMarkdown(markdown: string): string | null {
-    // Try to find first H1 or H2
     const h1Match = markdown.match(/^#\s+(.+)$/m);
     if (h1Match && h1Match[1]) {
       return h1Match[1].trim();

@@ -4,6 +4,7 @@ import path from "node:path";
 export interface ConversionOptions {
   strategy?: "auto" | "vision_llm" | "docling" | "text" | undefined;
   provider?: "auto" | "ollama" | "openai" | "gemini" | undefined;
+  prompt?: string | undefined;
 }
 
 export interface ConversionResponse {
@@ -15,18 +16,14 @@ export interface ConversionResponse {
   warnings?: string[] | undefined;
 }
 
-const COLLEGE_NOTICE_SYSTEM_PROMPT = `
-You are an expert document digitization assistant specialized in converting scanned paper college notices, circulars, exam schedules, and academic announcements into clean, highly structured Markdown.
-
+const DEFAULT_DIGITIZATION_PROMPT = `
+You are an expert document digitization assistant. Convert the supplied document images into clean, hierarchical, and structured Markdown.
 Guidelines:
-1. Identify issuing institution name as an H1 heading: # [Institution Name]
-2. Transcribe Reference Number, Date, and Academic Year as bold metadata or H2 headings.
-3. Transcribe the main notice subject as an H2 heading: ## Subject: [Title of Notice]
-4. Organize guidelines, rules, and schedules into distinct sections with H3 headings (### Schedule, ### Instructions, ### Important Dates).
-5. Convert tabular data (dates, shifts, subjects, fees) into clean GitHub-Flavored Markdown tables (| Header | Header |).
-6. Numbered steps for procedures, bullet points for notes.
-7. Include signing authority at the bottom under ### Signing Authority.
-8. Output ONLY the raw Markdown text, without wrapping in code fences.
+1. Use # for main titles and document headings.
+2. Use ## and ### for sub-sections, items, policies, or procedures.
+3. Convert all tables, schedules, pricing matrices, and tabular data into strict GitHub-Flavored Markdown tables (| Header | Header |).
+4. Preserve all numbers, dates, reference codes, names, prices, and contact details verbatim.
+5. Do not summarize or omit clauses. Return ONLY clean Markdown without code fences.
 `.trim();
 
 export async function convertFileToMarkdown(
@@ -51,6 +48,8 @@ export async function convertFileToMarkdown(
     process.env.EMBEDDING_MODEL_BASE_URL ||
     "http://127.0.0.1:8000";
 
+  const customPrompt = options?.prompt?.trim() || DEFAULT_DIGITIZATION_PROMPT;
+
   // Try Python Embedding / Conversion Service
   try {
     const form = new FormData();
@@ -64,6 +63,9 @@ export async function convertFileToMarkdown(
     }
     if (options?.provider) {
       form.append("provider", options.provider);
+    }
+    if (customPrompt) {
+      form.append("prompt", customPrompt);
     }
 
     const response = await fetch(`${baseUrl}/convert`, {
@@ -100,17 +102,17 @@ export async function convertFileToMarkdown(
       const res = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: COLLEGE_NOTICE_SYSTEM_PROMPT },
+          { role: "system", content: customPrompt },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `Digitize this college notice (${file.originalname}) into structured Markdown:`,
+                text: `Digitize this document (${file.originalname}) into structured Markdown:`,
               },
               {
                 type: "image_url",
-                image_url: { url: `data:${mime};base64://${b64}` },
+                image_url: { url: `data:${mime};base64,${b64}` },
               },
             ],
           },
@@ -147,10 +149,10 @@ export async function convertFileToMarkdown(
           model: process.env.VISION_MODEL || "qwen2.5vl:3b",
           stream: false,
           messages: [
-            { role: "system", content: COLLEGE_NOTICE_SYSTEM_PROMPT },
+            { role: "system", content: customPrompt },
             {
               role: "user",
-              content: `Convert this college notice (${file.originalname}) into structured Markdown:`,
+              content: `Convert this document (${file.originalname}) into structured Markdown:`,
               images: [b64],
             },
           ],

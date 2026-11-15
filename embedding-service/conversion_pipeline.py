@@ -228,30 +228,33 @@ def convert_scanned_notice_to_markdown(
     extension: str,
     strategy: str = "auto",
     provider: str = "auto",
+    custom_prompt: str | None = None,
 ) -> dict:
     """
-    Complete pipeline to convert scanned paper notices into high-quality Markdown.
-    Supports Vision LLM (OpenAI, Ollama, Gemini), Docling with OCR, and fallback cascade.
+    Complete pipeline to convert scanned paper notices, menus, or corporate docs into high-quality Markdown.
+    Supports dynamic domain prompts, Vision LLM (OpenAI, Ollama, Gemini), Docling with OCR, and fallback cascade.
     """
     images, warnings = get_visual_evidence(file_path, extension)
     strategy_used = "docling"
     markdown = ""
+
+    system_prompt_to_use = (custom_prompt and custom_prompt.strip()) or COLLEGE_NOTICE_SYSTEM_PROMPT
 
     # Strategy 1: Vision LLM for Scanned PDFs / Images
     use_vision = strategy in {"vision_llm", "auto"} and len(images) > 0
 
     if use_vision:
         user_prompt = (
-            f"Please transcribe and convert this college notice ({file_name}) into "
+            f"Please transcribe and convert this document ({file_name}) into "
             f"clean, structured Markdown following the guidelines. Preserve all tables, "
-            f"dates, reference numbers, and instructions."
+            f"dates, reference numbers, or item lists accurately."
         )
 
         # Attempt A: OpenAI Vision if key available or requested
         if (provider in {"openai", "auto"} and OPENAI_API_KEY) or provider == "openai":
             try:
                 raw = call_openai_vision(
-                    COLLEGE_NOTICE_SYSTEM_PROMPT,
+                    system_prompt_to_use,
                     user_prompt,
                     images,
                 )
@@ -266,7 +269,7 @@ def convert_scanned_notice_to_markdown(
         if not markdown.strip() and (provider in {"ollama", "auto"}):
             try:
                 raw = call_ollama(
-                    COLLEGE_NOTICE_SYSTEM_PROMPT,
+                    system_prompt_to_use,
                     user_prompt,
                     images=images,
                     timeout=90,

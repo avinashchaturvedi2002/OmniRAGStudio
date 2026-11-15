@@ -8,6 +8,7 @@ export interface DocumentMetadata {
   fileName?: string | undefined;
   mimeType?: string | undefined;
   category?: string | undefined;
+  projectId?: string | undefined;
 }
 
 export interface Document {
@@ -27,6 +28,8 @@ export interface DocumentSection {
 
 export interface DocumentRecord {
   id: string;
+  projectId?: string | undefined;
+  userId?: string | undefined;
   knowledgeBaseId: string;
   title: string;
   fileName: string;

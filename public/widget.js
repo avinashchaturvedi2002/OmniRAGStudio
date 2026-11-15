@@ -2,8 +2,8 @@
   "use strict";
 
   // Prevent multiple initializations
-  if (window.__CampusNoticeWidgetLoaded) return;
-  window.__CampusNoticeWidgetLoaded = true;
+  if (window.__RagEngineWidgetLoaded) return;
+  window.__RagEngineWidgetLoaded = true;
 
   // Find the current script tag to read configuration attributes
   const currentScript =
@@ -17,28 +17,45 @@
     currentScript?.getAttribute("data-api") ||
     window.location.origin ||
     "http://localhost:3000";
+  const projectId =
+    currentScript?.getAttribute("data-project-id") ||
+    currentScript?.getAttribute("data-project") ||
+    "";
+  const projectToken =
+    currentScript?.getAttribute("data-token") ||
+    currentScript?.getAttribute("data-public-token") ||
+    "";
   const knowledgeBaseId =
-    currentScript?.getAttribute("data-kb") || "college-notices";
-  const widgetTitle =
-    currentScript?.getAttribute("data-title") || "College Notice Assistant";
-  const primaryColor =
-    currentScript?.getAttribute("data-color") || "#1e40af";
-  const welcomeMessage =
-    currentScript?.getAttribute("data-welcome") ||
-    "Hello! I am your College Notice Assistant. Ask me anything about exam timetables, fee deadlines, academic circulars, or hostel guidelines.";
+    currentScript?.getAttribute("data-kb") || "default";
 
-  // Inject Styles
+  let widgetTitle =
+    currentScript?.getAttribute("data-title") || "AI Assistant";
+  let primaryColor =
+    currentScript?.getAttribute("data-color") || "#2563eb";
+  let welcomeMessage =
+    currentScript?.getAttribute("data-welcome") ||
+    "Hello! How can I help you today?";
+  let suggestedQuestions = [
+    "What services or options do you offer?",
+    "Where can I find pricing or fees?",
+    "What are your working hours and guidelines?",
+  ];
+
+  // Inject Styles with dynamic CSS custom properties
   const style = document.createElement("style");
-  style.id = "campus-notice-widget-styles";
+  style.id = "rag-engine-widget-styles";
   style.textContent = `
+    :root {
+      --rag-primary: ${primaryColor};
+    }
     .cnw-launcher {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      width: 60px;
-      height: 60px;
+      width: 58px;
+      height: 58px;
       border-radius: 50%;
-      background: ${primaryColor};
+      background: var(--rag-primary);
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
       display: flex;
       align-items: center;
@@ -46,27 +63,27 @@
       cursor: pointer;
       z-index: 999999;
       transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.35);
     }
     .cnw-launcher:hover {
       transform: scale(1.08);
       box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.35);
     }
     .cnw-launcher svg {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       fill: #ffffff;
       transition: transform 0.2s ease;
     }
     .cnw-badge {
       position: absolute;
-      top: -2px;
-      right: -2px;
+      top: -3px;
+      right: -3px;
       background: #ef4444;
       color: #fff;
       font-size: 11px;
       font-weight: 700;
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 10px;
       border: 2px solid #fff;
       font-family: system-ui, -apple-system, sans-serif;
@@ -75,13 +92,13 @@
       position: fixed;
       bottom: 96px;
       right: 24px;
-      width: 400px;
+      width: 410px;
       max-width: calc(100vw - 32px);
-      height: 600px;
+      height: 610px;
       max-height: calc(100vh - 120px);
       background: #ffffff;
       border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.06);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0,0,0,0.06);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -98,13 +115,13 @@
       transform: translateY(0) scale(1);
     }
     .cnw-header {
-      background: ${primaryColor};
+      background: var(--rag-primary);
       color: #ffffff;
-      padding: 16px 20px;
+      padding: 16px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     .cnw-header-info {
       display: flex;
@@ -114,12 +131,13 @@
     .cnw-avatar {
       width: 38px;
       height: 38px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.22);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 20px;
+      border: 1px solid rgba(255,255,255,0.4);
     }
     .cnw-title {
       font-size: 15px;
@@ -128,7 +146,7 @@
     }
     .cnw-subtitle {
       font-size: 11px;
-      opacity: 0.85;
+      color: rgba(255, 255, 255, 0.85);
       display: flex;
       align-items: center;
       gap: 5px;
@@ -137,25 +155,26 @@
     .cnw-status-dot {
       width: 7px;
       height: 7px;
-      background: #10b981;
+      background: #4ade80;
       border-radius: 50%;
       display: inline-block;
+      box-shadow: 0 0 6px #4ade80;
     }
     .cnw-header-actions {
       display: flex;
-      gap: 8px;
+      gap: 6px;
     }
     .cnw-btn-icon {
       background: rgba(255, 255, 255, 0.15);
       border: none;
-      color: #fff;
-      width: 28px;
-      height: 28px;
+      color: #ffffff;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
       font-size: 14px;
       transition: background 0.15s;
     }
@@ -172,103 +191,101 @@
       gap: 12px;
     }
     .cnw-msg {
-      max-width: 85%;
-      padding: 12px 14px;
-      border-radius: 14px;
+      max-width: 86%;
+      padding: 11px 15px;
+      border-radius: 16px;
       font-size: 13.5px;
-      line-height: 1.5;
+      line-height: 1.45;
       word-break: break-word;
-      animation: cnwFadeIn 0.2s ease-out;
-    }
-    @keyframes cnwFadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
     }
     .cnw-msg-user {
       align-self: flex-end;
-      background: ${primaryColor};
+      background: var(--rag-primary);
       color: #ffffff;
-      border-bottom-right-radius: 3px;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
     }
     .cnw-msg-bot {
       align-self: flex-start;
       background: #ffffff;
       color: #1e293b;
+      border-bottom-left-radius: 4px;
       border: 1px solid #e2e8f0;
-      border-bottom-left-radius: 3px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    }
+    .cnw-suggestions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .cnw-chip {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      color: #334155;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      display: inline-block;
+    }
+    .cnw-chip:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+      transform: translateX(2px);
     }
     .cnw-sources-box {
       margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px dashed #cbd5e1;
-      font-size: 11px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 6px;
     }
     .cnw-sources-btn {
-      background: #e2e8f0;
+      background: transparent;
       border: none;
-      border-radius: 6px;
-      padding: 3px 8px;
+      color: #64748b;
       font-size: 11px;
-      font-weight: 600;
       cursor: pointer;
-      color: #334155;
-      display: inline-flex;
+      padding: 2px 0;
+      font-weight: 600;
+      display: flex;
       align-items: center;
       gap: 4px;
     }
+    .cnw-sources-btn:hover {
+      color: #334155;
+    }
     .cnw-sources-list {
       display: none;
-      margin-top: 6px;
-      padding-left: 0;
       list-style: none;
+      padding: 0;
+      margin: 6px 0 0 0;
+      gap: 6px;
+      flex-direction: column;
     }
     .cnw-sources-list.cnw-expanded {
-      display: block;
+      display: flex;
     }
     .cnw-source-item {
-      background: #f1f5f9;
-      padding: 6px 8px;
-      border-radius: 6px;
-      margin-bottom: 4px;
-      border-left: 3px solid ${primaryColor};
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: 11px;
     }
     .cnw-source-title {
-      font-weight: 600;
-      color: #0f172a;
+      font-weight: 700;
+      color: #1e293b;
     }
     .cnw-source-path {
       color: #64748b;
       font-size: 10px;
+      margin: 1px 0;
     }
     .cnw-source-snippet {
       color: #475569;
-      margin-top: 3px;
-      font-size: 10.5px;
-      white-space: pre-wrap;
-      max-height: 80px;
-      overflow-y: auto;
-    }
-    .cnw-suggestions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 6px;
-    }
-    .cnw-chip {
-      background: #e2e8f0;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 4px 10px;
-      font-size: 11.5px;
-      color: #334155;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .cnw-chip:hover {
-      background: #dbeafe;
-      border-color: #93c5fd;
-      color: #1d4ed8;
+      line-height: 1.35;
     }
     .cnw-typing {
       display: flex;
@@ -277,7 +294,7 @@
       padding: 8px 12px;
       background: #ffffff;
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
+      border-radius: 14px;
       width: fit-content;
     }
     .cnw-dot {
@@ -285,13 +302,13 @@
       height: 6px;
       background: #94a3b8;
       border-radius: 50%;
-      animation: cnwPulse 1.2s infinite ease-in-out;
+      animation: cnwBounce 1.4s infinite ease-in-out both;
     }
-    .cnw-dot:nth-child(2) { animation-delay: 0.2s; }
-    .cnw-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes cnwPulse {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40% { transform: scale(1); opacity: 1; }
+    .cnw-dot:nth-child(1) { animation-delay: -0.32s; }
+    .cnw-dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes cnwBounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
     }
     .cnw-footer {
       padding: 12px;
@@ -311,11 +328,11 @@
       transition: border-color 0.15s;
     }
     .cnw-input:focus {
-      border-color: ${primaryColor};
+      border-color: var(--rag-primary);
       box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
     }
     .cnw-btn-send {
-      background: ${primaryColor};
+      background: var(--rag-primary);
       color: #ffffff;
       border: none;
       border-radius: 12px;
@@ -326,18 +343,9 @@
       justify-content: center;
       transition: opacity 0.15s;
     }
-    .cnw-btn-send:hover {
-      opacity: 0.9;
-    }
-    .cnw-btn-send:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .cnw-btn-send svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-    }
+    .cnw-btn-send:hover { opacity: 0.9; }
+    .cnw-btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+    .cnw-btn-send svg { width: 18px; height: 18px; fill: currentColor; }
     .cnw-powered {
       text-align: center;
       font-size: 10px;
@@ -348,12 +356,12 @@
   `;
   document.head.appendChild(style);
 
-  // Create Container
+  // Create Widget Root Container
   const container = document.createElement("div");
-  container.id = "campus-notice-widget-root";
+  container.id = "rag-engine-widget-root";
   container.innerHTML = `
-    <div class="cnw-launcher" id="cnwLauncher" title="Ask College Notice Bot">
-      <div class="cnw-badge" id="cnwBadge">Notices</div>
+    <div class="cnw-launcher" id="cnwLauncher" title="Ask Assistant">
+      <div class="cnw-badge" id="cnwBadge">Chat</div>
       <svg viewBox="0 0 24 24">
         <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
       </svg>
@@ -362,11 +370,11 @@
     <div class="cnw-window" id="cnwWindow">
       <div class="cnw-header">
         <div class="cnw-header-info">
-          <div class="cnw-avatar">🎓</div>
+          <div class="cnw-avatar" id="cnwAvatar">🤖</div>
           <div>
-            <div class="cnw-title">${widgetTitle}</div>
+            <div class="cnw-title" id="cnwTitle">${widgetTitle}</div>
             <div class="cnw-subtitle">
-              <span class="cnw-status-dot"></span> Verified Notice Database
+              <span class="cnw-status-dot"></span> Verified Knowledge Base
             </div>
           </div>
         </div>
@@ -377,14 +385,9 @@
       </div>
 
       <div class="cnw-body" id="cnwChatBody">
-        <div class="cnw-msg cnw-msg-bot">
-          ${welcomeMessage}
-          <div class="cnw-suggestions" id="cnwSuggestions">
-            <span class="cnw-chip" data-q="When are the end semester examinations?">📅 Exam Schedule</span>
-            <span class="cnw-chip" data-q="What is the last date to pay semester fees?">💰 Fee Deadline</span>
-            <span class="cnw-chip" data-q="What are the latest college notices?">📋 Latest Notices</span>
-            <span class="cnw-chip" data-q="What are the hostel rules and attendance requirements?">🏢 Hostel Rules</span>
-          </div>
+        <div class="cnw-msg cnw-msg-bot" id="cnwWelcomeMsgBox">
+          <div id="cnwWelcomeText">${welcomeMessage}</div>
+          <div class="cnw-suggestions" id="cnwSuggestions"></div>
         </div>
       </div>
 
@@ -393,7 +396,7 @@
           type="text" 
           class="cnw-input" 
           id="cnwInput" 
-          placeholder="Ask a question about notices..." 
+          placeholder="Ask a question..." 
           autocomplete="off"
         />
         <button class="cnw-btn-send" id="cnwSendBtn" title="Send message">
@@ -402,12 +405,12 @@
           </svg>
         </button>
       </div>
-      <div class="cnw-powered">Powered by College Notice RAG Engine</div>
+      <div class="cnw-powered" id="cnwPowered">Powered by AI RAG SaaS Platform</div>
     </div>
   `;
   document.body.appendChild(container);
 
-  // Widget Logic
+  // Widget Elements
   const launcher = document.getElementById("cnwLauncher");
   const win = document.getElementById("cnwWindow");
   const closeBtn = document.getElementById("cnwCloseBtn");
@@ -416,9 +419,70 @@
   const sendBtn = document.getElementById("cnwSendBtn");
   const chatBody = document.getElementById("cnwChatBody");
   const badge = document.getElementById("cnwBadge");
+  const titleEl = document.getElementById("cnwTitle");
+  const welcomeTextEl = document.getElementById("cnwWelcomeText");
+  const suggestionsEl = document.getElementById("cnwSuggestions");
+  const avatarEl = document.getElementById("cnwAvatar");
 
   let isOpen = false;
   let isSending = false;
+
+  function renderSuggestions(questions) {
+    if (!suggestionsEl) return;
+    suggestionsEl.innerHTML = "";
+    if (!questions || questions.length === 0) return;
+    questions.forEach((q) => {
+      const chip = document.createElement("span");
+      chip.className = "cnw-chip";
+      chip.textContent = q;
+      chip.addEventListener("click", () => {
+        if (!isSending) {
+          input.value = q;
+          sendMessage();
+        }
+      });
+      suggestionsEl.appendChild(chip);
+    });
+  }
+
+  // Fetch live widget config if projectId or token is provided
+  if (projectId || projectToken) {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.set("projectId", projectId);
+    if (projectToken) queryParams.set("token", projectToken);
+
+    fetch(`${apiBase}/api/v1/widget/config?${queryParams.toString()}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((cfg) => {
+        if (!cfg) return;
+        if (cfg.category === "college") avatarEl.textContent = "🎓";
+        else if (cfg.category === "restaurant") avatarEl.textContent = "🍕";
+        else if (cfg.category === "corporate") avatarEl.textContent = "💼";
+
+        if (cfg.widgetConfig?.title) {
+          widgetTitle = cfg.widgetConfig.title;
+          titleEl.textContent = widgetTitle;
+        }
+        if (cfg.widgetConfig?.primaryColor) {
+          primaryColor = cfg.widgetConfig.primaryColor;
+          document.documentElement.style.setProperty("--rag-primary", primaryColor);
+        }
+        if (cfg.widgetConfig?.welcomeMessage) {
+          welcomeMessage = cfg.widgetConfig.welcomeMessage;
+          welcomeTextEl.textContent = welcomeMessage;
+        }
+        if (Array.isArray(cfg.widgetConfig?.suggestedQuestions)) {
+          suggestedQuestions = cfg.widgetConfig.suggestedQuestions;
+          renderSuggestions(suggestedQuestions);
+        }
+      })
+      .catch(() => {
+        // Fallback to initial defaults
+        renderSuggestions(suggestedQuestions);
+      });
+  } else {
+    renderSuggestions(suggestedQuestions);
+  }
 
   function toggleWidget() {
     isOpen = !isOpen;
@@ -437,36 +501,31 @@
   clearBtn.addEventListener("click", () => {
     chatBody.innerHTML = `
       <div class="cnw-msg cnw-msg-bot">
-        ${welcomeMessage}
-        <div class="cnw-suggestions" id="cnwSuggestions">
-          <span class="cnw-chip" data-q="When are the end semester examinations?">📅 Exam Schedule</span>
-          <span class="cnw-chip" data-q="What is the last date to pay semester fees?">💰 Fee Deadline</span>
-          <span class="cnw-chip" data-q="What are the latest college notices?">📋 Latest Notices</span>
-          <span class="cnw-chip" data-q="What are the hostel rules and attendance requirements?">🏢 Hostel Rules</span>
-        </div>
+        <div>${welcomeMessage}</div>
+        <div class="cnw-suggestions" id="cnwSuggestions"></div>
       </div>
     `;
-    setupChips();
-  });
-
-  function setupChips() {
-    document.querySelectorAll(".cnw-chip").forEach((chip) => {
-      chip.addEventListener("click", () => {
-        const q = chip.getAttribute("data-q");
-        if (q && !isSending) {
-          input.value = q;
-          sendMessage();
-        }
+    const newSuggestionsEl = document.getElementById("cnwSuggestions");
+    if (newSuggestionsEl && suggestedQuestions) {
+      suggestedQuestions.forEach((q) => {
+        const chip = document.createElement("span");
+        chip.className = "cnw-chip";
+        chip.textContent = q;
+        chip.addEventListener("click", () => {
+          if (!isSending) {
+            input.value = q;
+            sendMessage();
+          }
+        });
+        newSuggestionsEl.appendChild(chip);
       });
-    });
-  }
-  setupChips();
+    }
+  });
 
   function appendMessage(text, role, sources = []) {
     const msgDiv = document.createElement("div");
     msgDiv.className = `cnw-msg ${role === "user" ? "cnw-msg-user" : "cnw-msg-bot"}`;
 
-    // Basic markdown conversion for bold and line breaks
     let formattedText = text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -476,7 +535,6 @@
 
     msgDiv.innerHTML = formattedText;
 
-    // Attach Sources if present
     if (sources && sources.length > 0) {
       const srcBox = document.createElement("div");
       srcBox.className = "cnw-sources-box";
@@ -492,7 +550,7 @@
         const item = document.createElement("li");
         item.className = "cnw-source-item";
         item.innerHTML = `
-          <div class="cnw-source-title">${s.source || "Notice"}</div>
+          <div class="cnw-source-title">${s.source || "Knowledge Document"}</div>
           <div class="cnw-source-path">${s.headingPath ? s.headingPath.join(" &gt; ") : ""}</div>
           <div class="cnw-source-snippet">${(s.content || "").slice(0, 150)}...</div>
         `;
@@ -544,13 +602,21 @@
     showTypingIndicator();
 
     try {
-      const res = await fetch(`${apiBase}/api/chat`, {
+      const useV1 = Boolean(projectId || projectToken);
+      const url = useV1 ? `${apiBase}/api/v1/chat` : `${apiBase}/api/chat`;
+
+      const headers = { "Content-Type": "application/json" };
+      if (projectToken) headers["x-project-token"] = projectToken;
+      if (projectId) headers["x-project-id"] = projectId;
+
+      const payload = useV1
+        ? { query: text, projectId, token: projectToken }
+        : { query: text, knowledgeBaseId };
+
+      const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: text,
-          knowledgeBaseId: knowledgeBaseId,
-        }),
+        headers,
+        body: JSON.stringify(payload),
       });
 
       removeTypingIndicator();
@@ -565,7 +631,7 @@
     } catch (err) {
       removeTypingIndicator();
       appendMessage(
-        `⚠️ Sorry, I couldn't reach the notice database. (${err.message}). Please check that the server is running.`,
+        `⚠️ Sorry, I couldn't reach the knowledge base. (${err.message}).`,
         "bot"
       );
     } finally {

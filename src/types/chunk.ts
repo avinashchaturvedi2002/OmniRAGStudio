@@ -5,11 +5,13 @@ export interface ChunkMetadata {
   documentTitle?: string | undefined;
   category?: string | undefined;
   uploadedAt?: string | undefined;
+  projectId?: string | undefined;
 }
 
 export interface Chunk {
   id: string;
   documentId: string;
+  projectId?: string | undefined;
   knowledgeBaseId: string;
   content: string;
   metadata: ChunkMetadata;

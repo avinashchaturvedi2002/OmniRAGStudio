@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>College Notice RAG Engine | Campus AI Digitizer & Chatbot</title>
+  <title>OmniRAG Studio | Multi-Tenant AI Bot Platform</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -13,52 +13,99 @@
     .prose table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
     .prose th, .prose td { border: 1px solid #cbd5e1; padding: 6px 10px; text-align: left; }
     .prose th { background-color: #f1f5f9; font-weight: 600; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
   <!-- Navbar -->
   <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-blue-500/30">
-          🎓
+        <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-blue-500/30">
+          🤖
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-base font-bold tracking-tight">CampusNotice RAG Engine</h1>
-            <span class="bg-blue-500/20 text-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-400/30">v1.0</span>
+            <h1 class="text-base font-bold tracking-tight">OmniRAG Studio</h1>
+            <span class="bg-blue-500/20 text-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-400/30">Multi-Tenant SaaS</span>
           </div>
-          <p class="text-[11px] text-slate-400">Scanned Notice Digitizer & Embeddable College Chatbot</p>
+          <p class="text-[11px] text-slate-400">Universal RAG Platform for Colleges, Restaurants & Enterprises</p>
         </div>
       </div>
 
-      <!-- System Health Indicator -->
-      <div class="flex items-center gap-4 text-xs">
+      <!-- Right Action Items -->
+      <div class="flex items-center gap-3 text-xs">
+        <!-- Server Status Indicator -->
         <div class="hidden sm:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span class="text-slate-300">Server & Database: <strong class="text-emerald-400" id="headerStatusText">Online</strong></span>
+          <span class="text-slate-300">Cluster: <strong class="text-emerald-400" id="headerStatusText">Online</strong></span>
         </div>
-        <a href="/widget-demo.html" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow">
-          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> View College Demo
+
+        <!-- College Demo Link -->
+        <a href="/widget-demo.html" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+          <i class="fa-solid fa-graduation-cap text-blue-400"></i>
+          <span>College Demo</span>
         </a>
+
+        <!-- User Authentication Pill -->
+        <div id="authContainer" class="flex items-center">
+          <button id="authBtn" onclick="openAuthModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-user-lock"></i> Sign In / Sign Up
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Selector Strip -->
+    <div id="projectSelectorStrip" class="bg-slate-950/80 border-t border-slate-800/80 px-4 sm:px-6 lg:px-8 py-2.5">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+        
+        <div class="flex items-center gap-3">
+          <span class="text-slate-400 font-medium flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-blue-400"></i> Active Project / Bot:
+          </span>
+
+          <select id="projectSelect" class="bg-slate-800 text-white font-semibold px-3 py-1.5 rounded-lg border border-slate-700 outline-none focus:border-blue-500 transition text-xs min-w-[240px]">
+            <option value="college-demo">🎓 SIT College Notice Bot</option>
+            <option value="restaurant-demo">🍕 Bella Italia Concierge</option>
+            <option value="corporate-demo">💼 Acme Corp HR & Policy Hub</option>
+          </select>
+
+          <span id="projectCategoryBadge" class="bg-blue-500/20 text-blue-300 font-semibold px-2 py-0.5 rounded border border-blue-400/30 uppercase text-[10px]">
+            Academic
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openNewProjectModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus text-[10px]"></i> Create New Bot
+          </button>
+        </div>
+
       </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div id="navTabs" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-800/60 pt-1 text-sm font-medium overflow-x-auto">
         <button onclick="switchTab('upload')" id="tabBtn-upload" class="tab-btn px-4 py-2.5 border-b-2 border-blue-500 text-blue-400 font-semibold flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-cloud-arrow-up"></i> 1. Upload & Digitize Notice
+          <i class="fa-solid fa-cloud-arrow-up"></i> 1. Ingest Documents
         </button>
         <button onclick="switchTab('explorer')" id="tabBtn-explorer" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-database"></i> 2. Notices & Chunks Explorer
+          <i class="fa-solid fa-database"></i> 2. Chunks & Knowledge Explorer
         </button>
         <button onclick="switchTab('chat')" id="tabBtn-chat" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-comments"></i> 3. Test Chatbot
+          <i class="fa-solid fa-comments"></i> 3. Bot Playground
+        </button>
+        <button onclick="switchTab('persona')" id="tabBtn-persona" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-brain"></i> 4. Bot Persona & Ingestion Prompt
         </button>
         <button onclick="switchTab('embed')" id="tabBtn-embed" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-code"></i> 4. Embeddable Widget
+          <i class="fa-solid fa-code"></i> 5. Embeddable Widget
         </button>
       </nav>
     </div>
@@ -68,22 +115,68 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
 
     <!-- ========================================================================= -->
-    <!-- TAB 1: UPLOAD & DIGITIZE NOTICE -->
+    <!-- EMPTY STATE: No Projects Yet (shown when user has 0 projects)             -->
+    <!-- ========================================================================= -->
+    <section id="emptyState" class="hidden">
+      <div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <!-- Illustration -->
+        <div class="w-24 h-24 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-3xl flex items-center justify-center text-5xl mb-6 shadow-xl shadow-blue-500/30">
+          🤖
+        </div>
+
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">Create your first bot</h2>
+        <p class="text-slate-500 text-sm max-w-md mb-8 leading-relaxed">
+          You don't have any AI bots yet. Set one up for your college, restaurant, corporate team, or any custom domain — it only takes a minute.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-wrap justify-center gap-3 mb-10">
+          <button onclick="openNewProjectModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-3 rounded-xl transition flex items-center gap-2 shadow-lg shadow-blue-500/20 text-sm">
+            <i class="fa-solid fa-plus"></i> Create Your First Bot
+          </button>
+          <a href="/widget-demo.html" target="_blank" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-6 py-3 rounded-xl transition flex items-center gap-2 border border-slate-300 text-sm">
+            <i class="fa-solid fa-graduation-cap text-blue-500"></i> See Live College Demo
+          </a>
+        </div>
+
+        <!-- Bot Type Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl w-full">
+          <div onclick="openNewProjectModal('college')" class="cursor-pointer bg-white border border-slate-200 hover:border-blue-400 hover:shadow-md rounded-2xl p-5 text-left transition group">
+            <div class="text-3xl mb-3">🎓</div>
+            <div class="font-semibold text-slate-800 text-sm group-hover:text-blue-600 transition">College Bot</div>
+            <div class="text-xs text-slate-500 mt-1">Notices, exam schedules, circulars & fee alerts</div>
+          </div>
+          <div onclick="openNewProjectModal('restaurant')" class="cursor-pointer bg-white border border-slate-200 hover:border-orange-400 hover:shadow-md rounded-2xl p-5 text-left transition group">
+            <div class="text-3xl mb-3">🍕</div>
+            <div class="font-semibold text-slate-800 text-sm group-hover:text-orange-600 transition">Restaurant Bot</div>
+            <div class="text-xs text-slate-500 mt-1">Menus, reservations, specials & dietary info</div>
+          </div>
+          <div onclick="openNewProjectModal('corporate')" class="cursor-pointer bg-white border border-slate-200 hover:border-emerald-400 hover:shadow-md rounded-2xl p-5 text-left transition group">
+            <div class="text-3xl mb-3">💼</div>
+            <div class="font-semibold text-slate-800 text-sm group-hover:text-emerald-600 transition">Corporate Bot</div>
+            <div class="text-xs text-slate-500 mt-1">HR policies, SOPs, leave & compliance docs</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: UPLOAD & DIGITIZE NOTICE / DOCUMENT -->
     <!-- ========================================================================= -->
     <section id="tab-upload" class="tab-content space-y-6">
       
-      <!-- Intro Banner -->
-      <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
+      <!-- Domain-Adaptive Dynamic Banner -->
+      <div id="domainBanner" class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
         <div class="relative z-10 max-w-3xl">
-          <span class="bg-blue-800 text-blue-200 text-xs px-2.5 py-1 rounded-full uppercase font-bold tracking-wider mb-2 inline-block">
-            Scanned Notice Pipeline
+          <span id="domainTag" class="bg-blue-800 text-blue-200 text-xs px-2.5 py-1 rounded-full uppercase font-bold tracking-wider mb-2 inline-block">
+            College & Academic Ingestion
           </span>
-          <h2 class="text-2xl font-bold mb-2">Upload Scanned College Notice to Semantic Chunks</h2>
-          <p class="text-sm text-blue-200 leading-relaxed">
-            Paper college notices and circulars are scanned into PDF or image files. This pipeline sends the scanned notice to an LLM Vision processor, reconstructs it into structured Markdown with proper headings, timetable tables, and dates, and parses it into semantic chunks with embeddings stored directly in the database.
+          <h2 id="domainTitle" class="text-2xl font-bold mb-2">Dynamic Domain Document Digitizer</h2>
+          <p id="domainSubtitle" class="text-sm text-blue-200 leading-relaxed">
+            Upload PDFs, scanned documents, circulars or images. Our dynamic Vision LLM prompt adapts automatically to this project's industry, structuring schedules, tables, prices, or policies into semantic chunks.
           </p>
         </div>
-        <div class="absolute right-6 -bottom-8 opacity-10 text-9xl">📄</div>
+        <div class="absolute right-6 -bottom-8 opacity-10 text-9xl">📑</div>
       </div>
 
       <!-- Upload Form Card -->
@@ -92,259 +185,236 @@
         <form id="uploadForm" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <!-- Knowledge Base ID -->
+            <!-- Project ID (Readonly) -->
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Knowledge Base ID <span class="text-red-500">*</span>
+                Target Project <span class="text-red-500">*</span>
               </label>
-              <div class="relative">
-                <input 
-                  type="text" 
-                  id="kbIdInput" 
-                  value="college-notices" 
-                  required
-                  class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                  placeholder="e.g. college-notices"
-                />
-                <span class="absolute right-3 top-2.5 text-xs text-slate-400">Namespace</span>
-              </div>
-              <p class="text-[11px] text-slate-500 mt-1">Identifies the collection/scope for this college chatbot.</p>
+              <input 
+                type="text" 
+                id="activeProjectInput" 
+                readonly 
+                class="w-full bg-slate-100 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 font-mono font-bold cursor-not-allowed"
+                value="college-demo"
+              />
+              <p class="text-[11px] text-slate-500 mt-1">Tenant isolation scopes chunks exclusively to this bot.</p>
             </div>
 
-            <!-- Category Tag -->
+            <!-- Document Category / Tag -->
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Notice Category
+                Document Category / Tag
               </label>
-              <select 
-                id="categoryInput" 
-                class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white transition"
-              >
-                <option value="Examinations">📅 Examinations & Schedules</option>
-                <option value="Fee & Accounts">💰 Fees, Accounts & Scholarships</option>
-                <option value="Academic Circulars">📚 Academic Circulars & Guidelines</option>
-                <option value="Hostel & Campus">🏢 Hostel & Campus Norms</option>
-                <option value="Admissions">🎯 Admissions & Counseling</option>
-                <option value="General" selected>📋 General Notice</option>
-              </select>
-              <p class="text-[11px] text-slate-500 mt-1">Attaches department metadata to every generated chunk.</p>
+              <input 
+                type="text" 
+                id="docCategoryInput" 
+                class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="e.g. Examinations, Dinner Menu, HR Policy"
+                value="General"
+              />
+              <p class="text-[11px] text-slate-500 mt-1">Tagged onto all chunks for filtered retrieval.</p>
             </div>
 
-            <!-- Conversion Strategy -->
+            <!-- Conversion Pipeline Strategy -->
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 LLM Conversion Strategy
               </label>
-              <select 
-                id="strategyInput" 
-                class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white font-medium text-blue-900 transition"
-              >
-                <option value="vision_llm" selected>🌟 Vision LLM (Best for Scanned Paper Notices)</option>
-                <option value="docling">⚡ Docling OCR (Local / Fast Layout Parsing)</option>
-                <option value="auto">🔄 Auto Detect (Vision LLM &rarr; Docling OCR)</option>
-                <option value="text">📄 Direct Text (For digital PDF/text files)</option>
+              <select id="strategyInput" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="vision_llm" selected>🌟 Vision LLM (Domain-Adaptive Prompting)</option>
+                <option value="node_builtin">📄 Direct Text / Fast Extractor</option>
               </select>
-              <p class="text-[11px] text-slate-500 mt-1">LLM transcribes scanned pages, tables & signatures into Markdown.</p>
+              <p class="text-[11px] text-slate-500 mt-1">Vision LLM uses this project's specialized system prompt.</p>
             </div>
 
           </div>
 
-          <!-- Drag and Drop Upload Area -->
+          <!-- Drag and Drop Area -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Notice Document / Scanned PDF <span class="text-red-500">*</span>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Document File (PDF, Image, DOCX, Markdown) <span class="text-red-500">*</span>
             </label>
             
-            <!-- Hidden File Input placed outside dropZone to prevent click bubbling recursion -->
-            <input type="file" id="fileInput" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.txt,.md" />
-
             <div 
               id="dropZone" 
-              class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 text-center cursor-pointer bg-slate-50/50 hover:bg-blue-50/30 transition duration-150 flex flex-col items-center justify-center gap-3 group"
+              class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 hover:bg-blue-50/40 rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center gap-3 group"
             >
-              <div class="w-16 h-16 rounded-2xl bg-blue-100 group-hover:bg-blue-200 text-blue-600 flex items-center justify-center text-3xl transition">
+              <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition shadow-sm">
                 <i class="fa-solid fa-file-pdf"></i>
               </div>
-
               <div>
-                <p class="text-sm font-semibold text-slate-800">
-                  <span class="text-blue-600 underline pointer-events-none">Click to browse</span> or drag and drop your scanned notice here
+                <p class="text-sm font-semibold text-slate-700">
+                  <span class="text-blue-600 underline">Click to browse</span> or drag and drop your document here
                 </p>
-                <p class="text-xs text-slate-500 mt-1">
+                <p class="text-xs text-slate-400 mt-1">
                   Supports Scanned PDF, Images (PNG, JPG), Word (DOCX), or Markdown (Up to 25 MB)
                 </p>
               </div>
 
-              <!-- Selected File Badge -->
-              <div id="selectedFileInfo" class="hidden items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-xl text-xs font-medium text-blue-900 mt-2">
-                <i class="fa-solid fa-paperclip"></i>
-                <span id="selectedFileName">notice.pdf</span>
-                <span id="selectedFileSize" class="text-slate-500">(1.2 MB)</span>
-                <button type="button" id="removeFileBtn" class="text-red-500 hover:text-red-700 ml-2 font-bold" title="Remove selected file">&times;</button>
+              <!-- Selected File Pill -->
+              <div id="selectedFileInfo" class="hidden items-center gap-2 bg-blue-50 text-blue-900 border border-blue-200 px-4 py-2 rounded-xl text-xs font-medium mt-2">
+                <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                <span id="selectedFileName" class="font-bold">filename.pdf</span>
+                <span id="selectedFileSize" class="text-blue-600 text-[11px]">(0 MB)</span>
+                <button type="button" id="removeFileBtn" class="ml-2 text-slate-400 hover:text-red-500">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
               </div>
             </div>
 
-            <!-- Instant Test Notice Option -->
-            <div class="flex items-center justify-between mt-3 text-xs">
-              <span class="text-slate-500">Don't have a scanned notice right now?</span>
+            <!-- Hidden File Input placed outside dropZone to prevent recursive click bubbling -->
+            <input 
+              type="file" 
+              id="fileInput" 
+              class="hidden" 
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.txt,.md,.markdown,.csv,.json"
+            />
+
+            <!-- Load Domain Realistic Sample Button -->
+            <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+              <span>Don't have a file right now?</span>
               <button 
                 type="button" 
                 id="loadSampleBtn" 
-                class="text-blue-600 hover:text-blue-800 font-semibold underline flex items-center gap-1.5"
+                class="text-blue-600 hover:text-blue-800 font-semibold hover:underline flex items-center gap-1"
               >
-                ✨ Load Realistic Sample College Notice (Exam Schedule & Timetable)
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                <span id="loadSampleBtnText">Load Realistic Sample College Notice</span>
               </button>
             </div>
+
           </div>
 
-          <!-- Submit Buttons -->
+          <!-- Action Buttons -->
           <div class="flex flex-wrap items-center gap-3 pt-2">
             <button 
               type="submit" 
               id="uploadSubmitBtn"
-              class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition flex items-center gap-2 shadow-lg shadow-blue-500/20 disabled:opacity-50"
+              class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm px-6 py-3 rounded-xl transition flex items-center gap-2 shadow-md shadow-blue-500/20"
             >
-              <i class="fa-solid fa-bolt"></i> Digitize Notice & Store Chunks in Database
+              <i class="fa-solid fa-bolt"></i> Digitize & Ingest into Bot
             </button>
 
             <button 
               type="button" 
               id="previewBtn"
-              class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-3 rounded-xl transition flex items-center gap-2 border border-slate-200"
+              class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm px-5 py-3 rounded-xl transition flex items-center gap-2 border border-slate-300"
             >
-              <i class="fa-solid fa-eye"></i> Preview Markdown Only (No DB Write)
+              <i class="fa-regular fa-eye"></i> Preview Markdown Only (No DB Write)
             </button>
           </div>
+
         </form>
-
-        <!-- Live Step-by-Step Pipeline Progress Indicator -->
-        <div id="pipelineProgress" class="hidden bg-slate-900 text-white p-6 rounded-2xl space-y-4 shadow-md">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div class="flex items-center gap-2">
-              <i class="fa-solid fa-gear fa-spin text-blue-400"></i>
-              <span class="font-bold text-sm">Processing Pipeline in Progress...</span>
-            </div>
-            <span id="pipelineTimer" class="text-xs text-slate-400 font-mono">0s</span>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
-            <div id="step-1" class="step-card bg-slate-800 p-3 rounded-xl border border-blue-500/50 flex flex-col gap-1.5">
-              <div class="flex items-center justify-between font-semibold text-blue-400">
-                <span>1. Upload File</span>
-                <i class="fa-solid fa-spinner fa-spin text-xs"></i>
-              </div>
-              <p class="text-[11px] text-slate-400">Sending notice binary to server</p>
-            </div>
-
-            <div id="step-2" class="step-card bg-slate-800 p-3 rounded-xl border border-slate-700 opacity-60 flex flex-col gap-1.5">
-              <div class="flex items-center justify-between font-semibold text-slate-300">
-                <span>2. Vision LLM</span>
-                <i class="fa-regular fa-clock text-xs"></i>
-              </div>
-              <p class="text-[11px] text-slate-400">Transcribing scanned paper & tables to Markdown</p>
-            </div>
-
-            <div id="step-3" class="step-card bg-slate-800 p-3 rounded-xl border border-slate-700 opacity-60 flex flex-col gap-1.5">
-              <div class="flex items-center justify-between font-semibold text-slate-300">
-                <span>3. AST Chunking</span>
-                <i class="fa-regular fa-clock text-xs"></i>
-              </div>
-              <p class="text-[11px] text-slate-400">Splitting by sections, breadcrumbs & token bounds</p>
-            </div>
-
-            <div id="step-4" class="step-card bg-slate-800 p-3 rounded-xl border border-slate-700 opacity-60 flex flex-col gap-1.5">
-              <div class="flex items-center justify-between font-semibold text-slate-300">
-                <span>4. Embeddings</span>
-                <i class="fa-regular fa-clock text-xs"></i>
-              </div>
-              <p class="text-[11px] text-slate-400">Generating vector embeddings for chunks</p>
-            </div>
-
-            <div id="step-5" class="step-card bg-slate-800 p-3 rounded-xl border border-slate-700 opacity-60 flex flex-col gap-1.5">
-              <div class="flex items-center justify-between font-semibold text-slate-300">
-                <span>5. MongoDB DB</span>
-                <i class="fa-regular fa-clock text-xs"></i>
-              </div>
-              <p class="text-[11px] text-slate-400">Persisting chunks & document record</p>
-            </div>
-          </div>
-        </div>
 
       </div>
 
-      <!-- Result Inspector Area (Appears after upload or preview) -->
-      <div id="resultInspector" class="hidden space-y-6">
-        
-        <!-- Summary Alert -->
-        <div class="bg-emerald-50 border border-emerald-200 p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div class="flex items-center gap-3.5">
-            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl">
-              <i class="fa-solid fa-circle-check"></i>
+      <!-- Real-time Pipeline Progress Tracker -->
+      <div id="pipelineProgress" class="hidden bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
+              ⚡
             </div>
             <div>
-              <h4 class="font-bold text-emerald-950 text-base" id="resultTitle">Notice Ingested Successfully!</h4>
-              <p class="text-xs text-emerald-800" id="resultSubtitle">Generated 6 chunks with embeddings and stored in MongoDB.</p>
+              <h3 class="text-sm font-bold">Dynamic Ingestion Pipeline Running</h3>
+              <p class="text-xs text-slate-400">Transforming document into semantic vector chunks</p>
             </div>
           </div>
+          <span class="text-xs font-mono text-blue-400 bg-blue-950 px-2.5 py-1 rounded border border-blue-800" id="pipelineTimer">0s</span>
+        </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
+          <div id="step-1" class="step-card bg-slate-800 p-3 rounded-xl border border-blue-500 flex flex-col gap-1.5">
+            <span class="font-bold flex items-center gap-1.5 text-blue-400">
+              <i class="fa-solid fa-spinner fa-spin"></i> 1. File Received
+            </span>
+            <span class="text-[11px] text-slate-400">Validating multipart buffer</span>
+          </div>
+
+          <div id="step-2" class="step-card bg-slate-800/50 p-3 rounded-xl border border-slate-700 opacity-60 flex flex-col gap-1.5">
+            <span class="font-bold flex items-center gap-1.5 text-slate-300">
+              <i class="fa-regular fa-clock"></i> 2. Domain LLM
+            </span>
+            <span class="text-[11px] text-slate-400">Vision prompt transcription</span>
+          </div>
+
+          <div id="step-3" class="step-card bg-slate-800/50 p-3 rounded-xl border border-slate-700 opacity-60 flex flex-col gap-1.5">
+            <span class="font-bold flex items-center gap-1.5 text-slate-300">
+              <i class="fa-regular fa-clock"></i> 3. AST Chunking
+            </span>
+            <span class="text-[11px] text-slate-400">Splitting by headings & tables</span>
+          </div>
+
+          <div id="step-4" class="step-card bg-slate-800/50 p-3 rounded-xl border border-slate-700 opacity-60 flex flex-col gap-1.5">
+            <span class="font-bold flex items-center gap-1.5 text-slate-300">
+              <i class="fa-regular fa-clock"></i> 4. Dense Embeddings
+            </span>
+            <span class="text-[11px] text-slate-400">768-dim vectorization</span>
+          </div>
+
+          <div id="step-5" class="step-card bg-slate-800/50 p-3 rounded-xl border border-slate-700 opacity-60 flex flex-col gap-1.5">
+            <span class="font-bold flex items-center gap-1.5 text-slate-300">
+              <i class="fa-regular fa-clock"></i> 5. Scoped DB Store
+            </span>
+            <span class="text-[11px] text-slate-400">Project-isolated storage</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ingestion Results / Markdown Inspector -->
+      <div id="resultInspector" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2" id="resultTitle">
+              <i class="fa-solid fa-circle-check text-emerald-500"></i> Document Processed Successfully
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5" id="resultSubtitle">Generated semantic chunks for this project.</p>
+          </div>
           <div class="flex items-center gap-2">
-            <button onclick="switchTab('chat')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1.5">
-              <i class="fa-solid fa-comments"></i> Test in Chatbot &rarr;
-            </button>
-            <button onclick="switchTab('explorer')" class="bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-800 text-xs font-semibold px-4 py-2 rounded-xl transition">
-              View in Explorer
-            </button>
+            <span class="bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full text-xs" id="resultChunkBadge">
+              <span id="resChunkCount">0</span> Chunks
+            </span>
+            <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-mono" id="resultStrategyBadge">
+              Vision LLM
+            </span>
           </div>
         </div>
 
-        <!-- Result Tabs: Markdown View vs Chunks View -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="border-b border-slate-200 px-6 pt-4 flex items-center justify-between bg-slate-50/50">
-            <div class="flex space-x-4">
-              <button id="resTab-chunks" onclick="switchResultTab('chunks')" class="pb-3 border-b-2 border-blue-600 font-bold text-sm text-blue-600 flex items-center gap-2">
-                <i class="fa-solid fa-layer-group"></i> Stored Chunks (<span id="resChunkCount">0</span>)
-              </button>
-              <button id="resTab-markdown" onclick="switchResultTab('markdown')" class="pb-3 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-file-lines"></i> LLM Extracted Markdown
-              </button>
-            </div>
-            <div class="text-xs text-slate-500 pb-3" id="resultStrategyBadge">Strategy: vision_llm</div>
+        <!-- Result View Tabs -->
+        <div class="border-b border-slate-200">
+          <nav class="flex space-x-6 text-xs font-semibold">
+            <button onclick="switchResultTab('chunks')" id="resTab-chunks" class="py-2.5 border-b-2 border-blue-600 text-blue-600 flex items-center gap-1.5">
+              <i class="fa-solid fa-layer-group"></i> Semantic Chunks Generated
+            </button>
+            <button onclick="switchResultTab('markdown')" id="resTab-markdown" class="py-2.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+              <i class="fa-brands fa-markdown"></i> Clean Structured Markdown
+            </button>
+          </nav>
+        </div>
+
+        <!-- Chunks View -->
+        <div id="resView-chunks" class="space-y-4">
+          <div id="chunksListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-1 custom-scroll">
+            <!-- Dynamic Chunk Cards Injected Here -->
           </div>
+        </div>
 
-          <!-- Tab Content 1: Database Chunks Inspector -->
-          <div id="resView-chunks" class="p-6 space-y-4">
-            <div class="text-xs text-slate-500 mb-2">
-              Every chunk below has been sliced along semantic Markdown heading boundaries and embedded with its full breadcrumb path:
-            </div>
-            <div id="chunksListContainer" class="space-y-4">
-              <!-- Rendered dynamically -->
-            </div>
+        <!-- Clean Markdown View -->
+        <div id="resView-markdown" class="hidden space-y-4">
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-500 font-mono">Vision LLM Clean Output</span>
+            <button id="copyMdBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg border flex items-center gap-1 font-semibold">
+              <i class="fa-regular fa-copy"></i> Copy Markdown
+            </button>
           </div>
-
-          <!-- Tab Content 2: Markdown Preview -->
-          <div id="resView-markdown" class="hidden p-6 space-y-4">
-            <div class="flex items-center justify-between bg-slate-100 p-2.5 rounded-xl text-xs">
-              <span class="text-slate-600 font-medium">Structured Markdown output produced by the LLM from the scanned paper notice</span>
-              <button id="copyMdBtn" class="bg-white border border-slate-300 hover:bg-slate-50 px-2.5 py-1 rounded text-slate-700 font-medium transition flex items-center gap-1">
-                <i class="fa-regular fa-copy"></i> Copy Markdown
-              </button>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-auto max-h-[500px] custom-scroll whitespace-pre-wrap" id="markdownRaw">
+              <!-- Raw Markdown -->
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <!-- Rendered Preview -->
-              <div class="border border-slate-200 rounded-xl p-5 bg-white max-h-[500px] overflow-y-auto">
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Rendered HTML View</div>
-                <div id="markdownRendered" class="prose prose-sm max-w-none text-slate-800"></div>
-              </div>
-
-              <!-- Raw Code -->
-              <div class="border border-slate-200 rounded-xl p-5 bg-slate-900 text-slate-200 font-mono text-xs max-h-[500px] overflow-y-auto">
-                <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Raw Markdown Code</div>
-                <pre id="markdownRaw" class="whitespace-pre-wrap break-words"></pre>
-              </div>
+            <div class="bg-slate-50 border p-4 rounded-xl text-xs overflow-auto max-h-[500px] custom-scroll prose max-w-none" id="markdownRendered">
+              <!-- Rendered Markdown -->
             </div>
           </div>
-
         </div>
 
       </div>
@@ -356,269 +426,297 @@
     <!-- ========================================================================= -->
     <section id="tab-explorer" class="tab-content hidden space-y-6">
       
-      <!-- Explorer Header & Summary Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Stats Summary Strip -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl font-bold">
-            <i class="fa-solid fa-file-lines"></i>
+          <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-regular fa-folder-open"></i>
           </div>
           <div>
-            <div class="text-2xl font-black text-slate-900" id="statTotalDocs">0</div>
-            <div class="text-xs text-slate-500">Notices Ingested</div>
+            <div class="text-2xl font-black text-slate-800" id="statTotalDocs">0</div>
+            <div class="text-xs text-slate-500 font-medium">Ingested Documents</div>
           </div>
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl font-bold">
-            <i class="fa-solid fa-layer-group"></i>
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-cube"></i>
           </div>
           <div>
-            <div class="text-2xl font-black text-slate-900" id="statTotalChunks">0</div>
-            <div class="text-xs text-slate-500">Chunks Stored in DB</div>
+            <div class="text-2xl font-black text-slate-800" id="statTotalChunks">0</div>
+            <div class="text-xs text-slate-500 font-medium">Semantic Vector Chunks</div>
           </div>
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl font-bold">
-            <i class="fa-solid fa-folder-tree"></i>
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-shield-halved"></i>
           </div>
           <div>
-            <div class="text-2xl font-black text-slate-900" id="statTotalKbs">1</div>
-            <div class="text-xs text-slate-500">Knowledge Bases</div>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-bold">
-            <i class="fa-solid fa-database"></i>
-          </div>
-          <div>
-            <div class="text-sm font-bold text-slate-900" id="statMongoStatus">Connected</div>
-            <div class="text-xs text-slate-500">chunks collection</div>
+            <div class="text-sm font-bold text-slate-800 truncate" id="statTenantName">State Institute of Technology</div>
+            <div class="text-xs text-slate-500 font-medium">Active Bot Tenant</div>
           </div>
         </div>
       </div>
 
-      <!-- Notices Table Card -->
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
+      <!-- Documents Table Card -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 class="text-lg font-bold text-slate-900">College Notices in Database</h3>
-            <p class="text-xs text-slate-500">Browse all digitized notices, view their individual chunks in MongoDB, or remove old circulars.</p>
+            <h3 class="text-base font-bold text-slate-800">Knowledge Documents in this Bot</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Documents indexed in MongoDB Atlas and available to the RAG chat engine.</p>
           </div>
-          <button onclick="loadExplorerData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
-            <i class="fa-solid fa-rotate-right"></i> Refresh
+          <button onclick="loadExplorerData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-rotate-right"></i> Refresh Table
           </button>
         </div>
 
-        <!-- Table Container -->
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs text-slate-600">
-            <thead class="bg-slate-50 text-slate-700 font-bold uppercase text-[10px] tracking-wider border-b">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
               <tr>
-                <th class="py-3 px-4">Notice Title / File</th>
+                <th class="py-3 px-4">Title / Filename</th>
                 <th class="py-3 px-4">Category</th>
-                <th class="py-3 px-4">Uploaded</th>
-                <th class="py-3 px-4">Chunks in DB</th>
+                <th class="py-3 px-4">Indexed Date</th>
+                <th class="py-3 px-4">Chunks</th>
                 <th class="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody id="noticesTableBody" class="divide-y divide-slate-100">
-              <tr>
-                <td colspan="5" class="py-8 text-center text-slate-400">
-                  <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading notices from database...
-                </td>
-              </tr>
+            <tbody id="noticesTableBody" class="divide-y divide-slate-100 font-medium text-slate-700">
+              <!-- Loaded dynamically via loadExplorerData() -->
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Modal / Slideover for Chunk Inspection -->
-      <div id="chunkModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-          <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-            <div>
-              <h4 class="font-bold text-sm" id="modalDocTitle">Document Chunks</h4>
-              <p class="text-xs text-slate-400" id="modalDocSubtitle">Chunks stored in MongoDB</p>
-            </div>
-            <button onclick="closeChunkModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
-          </div>
-          <div class="p-6 overflow-y-auto space-y-4 flex-1" id="modalChunksContainer">
-            <!-- Injected dynamically -->
-          </div>
-          <div class="bg-slate-50 px-6 py-3 border-t text-right">
-            <button onclick="closeChunkModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-4 py-2 rounded-xl">Close</button>
-          </div>
-        </div>
-      </div>
-
     </section>
 
     <!-- ========================================================================= -->
-    <!-- TAB 3: TEST CHATBOT -->
+    <!-- TAB 3: BOT PLAYGROUND (TEST CHATBOT) -->
     <!-- ========================================================================= -->
     <section id="tab-chat" class="tab-content hidden space-y-6">
       
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[700px]">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[650px] overflow-hidden">
         
         <!-- Chat Header -->
-        <div class="bg-slate-900 text-white p-4 flex items-center justify-between border-b border-slate-800">
+        <div class="p-4 bg-slate-900 text-white border-b border-slate-800 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-xl">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-xl shadow" id="chatBotAvatar">
               🎓
             </div>
             <div>
-              <h3 class="font-bold text-sm">College Notice Assistant</h3>
-              <p class="text-xs text-blue-300 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Connected to MongoDB Vector Store
-              </p>
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-bold" id="chatBotTitle">SIT Notice Assistant</h3>
+                <span class="bg-emerald-500/20 text-emerald-400 text-[10px] font-semibold px-2 py-0.5 rounded border border-emerald-500/30">Active Playground</span>
+              </div>
+              <p class="text-[11px] text-slate-400" id="chatBotSubtitle">Answering questions strictly from this project's verified knowledge base</p>
             </div>
           </div>
-
-          <div class="flex items-center gap-2">
-            <select id="chatKbSelect" class="bg-slate-800 text-white text-xs border border-slate-700 rounded-lg px-2.5 py-1.5 outline-none">
-              <option value="college-notices">KB: college-notices</option>
-            </select>
-            <button id="chatClearBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-slate-700">
-              Clear
-            </button>
-          </div>
+          <button id="chatClearBtn" class="text-slate-400 hover:text-white text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+            <i class="fa-solid fa-trash-can mr-1"></i> Clear
+          </button>
         </div>
 
-        <!-- Chat Messages Window -->
-        <div id="chatMessages" class="flex-1 p-6 overflow-y-auto bg-slate-50 space-y-4">
-          
+        <!-- Chat Messages Area -->
+        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50 custom-scroll text-xs">
+          <!-- Bot Welcome Message -->
           <div class="flex gap-3 max-w-2xl">
-            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm flex-shrink-0">
-              🤖
+            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm flex-shrink-0" id="chatWelcomeAvatar">
+              🎓
             </div>
-            <div class="bg-white border border-slate-200 rounded-2xl p-4 text-xs text-slate-800 shadow-sm space-y-2">
-              <p>
-                Hello! I am your <strong>College Notice Assistant</strong>. You can ask me any question regarding examination timetables, fee submission rules, attendance criteria, or hostel regulations from uploaded notices.
-              </p>
-              <div class="pt-1">
-                <p class="font-semibold text-slate-500 text-[11px] mb-1.5">Try asking:</p>
-                <div class="flex flex-wrap gap-2">
-                  <button onclick="askChatSample('When do the end-semester examinations begin?')" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-[11px] px-2.5 py-1 rounded-lg border border-slate-200">
-                    📅 When do end-semester exams begin?
-                  </button>
-                  <button onclick="askChatSample('What is the deadline for paying semester fees without fine?')" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-[11px] px-2.5 py-1 rounded-lg border border-slate-200">
-                    💰 Fee payment deadline & fine rules
-                  </button>
-                  <button onclick="askChatSample('What are the rules regarding hall tickets and exam entry?')" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-[11px] px-2.5 py-1 rounded-lg border border-slate-200">
-                    📝 Hall ticket entry rules
-                  </button>
-                </div>
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 text-xs shadow-sm text-slate-800 leading-relaxed">
+              <div id="chatWelcomeText">
+                Hello! I am your AI Assistant. Ask me anything about this knowledge base.
+              </div>
+              <div class="mt-3 flex flex-wrap gap-2" id="chatSuggestedChips">
+                <!-- Injected dynamically -->
               </div>
             </div>
           </div>
-
         </div>
 
-        <!-- Chat Input Bar -->
-        <div class="p-4 bg-white border-t border-slate-200">
-          <form id="chatForm" class="flex gap-2">
-            <input 
-              type="text" 
-              id="chatQueryInput" 
-              placeholder="Ask a question about any uploaded college notice..." 
-              required
-              class="flex-1 px-4 py-3 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-            />
-            <button 
-              type="submit" 
-              id="chatSendBtn"
-              class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition flex items-center gap-2 shadow"
-            >
-              <span>Send</span>
-              <i class="fa-solid fa-paper-plane text-xs"></i>
-            </button>
-          </form>
-        </div>
+        <!-- Chat Input Form -->
+        <form id="chatForm" class="p-4 bg-white border-t border-slate-200 flex gap-3 items-center">
+          <input 
+            type="text" 
+            id="chatQueryInput" 
+            placeholder="Type your question..." 
+            class="flex-1 border border-slate-300 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none"
+            autocomplete="off"
+          />
+          <button 
+            type="submit" 
+            class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow"
+          >
+            <span>Ask Bot</span>
+            <i class="fa-solid fa-paper-plane text-[10px]"></i>
+          </button>
+        </form>
 
       </div>
 
     </section>
 
     <!-- ========================================================================= -->
-    <!-- TAB 4: EMBEDDABLE WIDGET GENERATOR -->
+    <!-- TAB 4: BOT PERSONA & INGESTION PROMPT (SETTINGS) -->
     <!-- ========================================================================= -->
-    <section id="tab-embed" class="tab-content hidden space-y-6">
+    <section id="tab-persona" class="tab-content hidden space-y-6">
       
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
         <div>
-          <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full uppercase font-bold tracking-wider mb-2 inline-block">
-            Easy Deployment
-          </span>
-          <h3 class="text-xl font-bold text-slate-900">Embed College Notice Chatbot onto Your Website</h3>
-          <p class="text-sm text-slate-600 mt-1">
-            Deploy this chatbot to your college portal, student dashboard, or department page with a single line of HTML.
+          <h3 class="text-base font-bold text-slate-800">Bot Persona & Dynamic Ingestion Configuration</h3>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Configure how the Vision LLM digitizes documents for this bot, and customize how the chatbot answers client inquiries.
           </p>
         </div>
 
-        <!-- Configurator Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <form id="settingsForm" class="space-y-6">
           
-          <!-- Configuration Knobs -->
-          <div class="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-200">
-            <h4 class="font-bold text-sm text-slate-800 border-b pb-2">Customize Widget Settings</h4>
-
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Bot Name -->
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">Chatbot Display Title</label>
-              <input type="text" id="cfgTitle" value="Campus Notice Assistant" oninput="updateSnippet()" class="w-full text-xs p-2.5 border rounded-lg bg-white" />
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Bot Display Name
+              </label>
+              <input 
+                type="text" 
+                id="settingBotName" 
+                class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+
+            <!-- Bot Category -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Preset Category
+              </label>
+              <select id="settingBotCategory" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="college">🎓 College & Academic</option>
+                <option value="restaurant">🍕 Restaurant & Hospitality</option>
+                <option value="corporate">💼 Corporate & HR Policies</option>
+                <option value="custom">⚙️ Custom Industry</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dynamic Vision LLM Ingestion Prompt -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                🌟 Dynamic Ingestion Prompt (Vision LLM)
+              </label>
+              <button type="button" onclick="resetToPresetPrompt()" class="text-blue-600 hover:text-blue-800 text-[11px] font-semibold">
+                Reset to Category Preset
+              </button>
+            </div>
+            <textarea 
+              id="settingIngestionPrompt" 
+              rows="6" 
+              class="w-full font-mono text-xs bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-700 focus:border-blue-500 outline-none custom-scroll"
+            ></textarea>
+            <p class="text-[11px] text-slate-500 mt-1">This exact prompt guides the Vision LLM when converting scanned PDFs/images into Markdown tables, headings, and dietary/rule markers for this project.</p>
+          </div>
+
+          <!-- Chat AI Persona System Prompt -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              🤖 RAG Chat System Persona Prompt
+            </label>
+            <textarea 
+              id="settingSystemPrompt" 
+              rows="5" 
+              class="w-full font-mono text-xs bg-slate-50 text-slate-800 p-4 rounded-xl border border-slate-300 focus:border-blue-500 outline-none custom-scroll"
+            ></textarea>
+            <p class="text-[11px] text-slate-500 mt-1">Instructs the LLM on tone, citation rules, and role behavior when answering user queries.</p>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button 
+              type="submit" 
+              class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-6 py-2.5 rounded-xl transition flex items-center gap-2 shadow"
+            >
+              <i class="fa-solid fa-floppy-disk"></i> Save Project Settings
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 5: EMBEDDABLE WIDGET CUSTOMIZER & CODE GENERATOR -->
+    <!-- ========================================================================= -->
+    <section id="tab-embed" class="tab-content hidden space-y-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Customization Controls -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+          <div>
+            <h3 class="text-base font-bold text-slate-800">Customize Client Chatbot Widget</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Embed this bot onto any client or company website with a single script tag.</p>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Widget Title</label>
+              <input type="text" id="cfgTitle" class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none" value="AI Assistant" oninput="updateSnippet()">
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">Knowledge Base ID</label>
-              <input type="text" id="cfgKb" value="college-notices" oninput="updateSnippet()" class="w-full text-xs p-2.5 border rounded-lg bg-white" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">Brand Theme Color</label>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Primary Theme Color</label>
               <div class="flex items-center gap-3">
-                <input type="color" id="cfgColor" value="#1e40af" oninput="updateSnippet()" class="h-9 w-12 border rounded cursor-pointer" />
-                <span class="text-xs font-mono text-slate-600" id="colorHexText">#1e40af</span>
+                <input type="color" id="cfgColor" class="w-10 h-10 rounded-xl border border-slate-300 cursor-pointer p-0.5" value="#1e40af" oninput="updateSnippet()">
+                <span id="colorHexText" class="font-mono text-xs text-slate-600 font-bold">#1e40af</span>
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">Backend API URL</label>
-              <input type="text" id="cfgApi" value="" placeholder="e.g. http://localhost:3000" oninput="updateSnippet()" class="w-full text-xs p-2.5 border rounded-lg bg-white" />
-              <p class="text-[10px] text-slate-400 mt-1">Leave empty if the widget is hosted on the same domain as the API.</p>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Public Token (Client Safe)</label>
+              <input type="text" id="cfgToken" readonly class="w-full bg-slate-100 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-mono text-slate-700 cursor-not-allowed">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Allowed Website Domains (CORS)</label>
+              <input type="text" id="cfgAllowedDomains" class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none" value="*" placeholder="e.g. *, example.com, mycollege.edu">
+              <p class="text-[11px] text-slate-500 mt-1">Use * to permit any website, or enter comma-separated domains.</p>
             </div>
           </div>
+        </div>
 
-          <!-- Code Snippet Output -->
-          <div class="space-y-4">
+        <!-- Generated Embed Code & Instructions -->
+        <div class="space-y-6">
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl p-6 text-white space-y-4">
             <div class="flex items-center justify-between">
-              <h4 class="font-bold text-sm text-slate-800">Copy Embed Code</h4>
-              <button onclick="copySnippet()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Copy & Paste onto Website</span>
+              <button onclick="copySnippet()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow">
                 <i class="fa-regular fa-copy"></i> <span id="copySnippetBtnText">Copy HTML Code</span>
               </button>
             </div>
 
-            <div class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 shadow-inner">
-              <pre id="snippetCode" class="whitespace-pre-wrap break-all"></pre>
-            </div>
+            <pre class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-blue-300 overflow-x-auto border border-slate-800 custom-scroll"><code id="snippetCode"></code></pre>
+            
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Place this single script tag right before the closing <code class="text-white">&lt;/body&gt;</code> tag on any HTML page, WordPress, React, or Shopify site. The floating bot will automatically appear!
+            </p>
+          </div>
 
-            <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-xs text-blue-900 space-y-2">
-              <div class="font-bold flex items-center gap-1.5">
-                <i class="fa-solid fa-circle-info"></i> How it works:
-              </div>
-              <ol class="list-decimal pl-4 space-y-1 text-slate-700">
-                <li>Paste this <code>&lt;script&gt;</code> tag right before the closing <code>&lt;/body&gt;</code> tag of your college website.</li>
-                <li>A floating chat bubble appears automatically in the bottom-right corner.</li>
-                <li>Students can click to open, ask questions, and get accurate answers derived directly from the uploaded notices!</li>
-              </ol>
+          <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 text-blue-900 flex items-start gap-4">
+            <div class="text-2xl text-blue-600">💡</div>
+            <div class="text-xs space-y-1">
+              <div class="font-bold text-sm">Instant Testing on Demo Page</div>
+              <p class="text-blue-700">
+                You can immediately see the widget in action on the realistic demo college website by clicking below:
+              </p>
               <div class="pt-2">
-                <a href="/widget-demo.html" target="_blank" class="font-bold text-blue-700 hover:underline">
-                  👉 Click here to see the live demo college website &rarr;
+                <a href="/widget-demo.html" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg font-semibold inline-flex items-center gap-1 shadow">
+                  Open Live Demo Site <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                 </a>
               </div>
             </div>
           </div>
-
         </div>
 
       </div>
@@ -627,53 +725,629 @@
 
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-    College Notice RAG Engine • Powered by Vision LLM & AST Chunking Pipeline
-  </footer>
+  <!-- ========================================================================= -->
+  <!-- MODALS -->
+  <!-- ========================================================================= -->
 
-  <!-- EMBEDDED WIDGET INSTANCE FOR IMMEDIATE TESTING -->
-  <script src="/widget.js" data-api="" data-kb="college-notices" data-title="Notice Assistant"></script>
+  <!-- Chunks Inspection Modal -->
+  <div id="chunkModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div>
+          <h4 class="text-sm font-bold text-slate-800" id="modalDocTitle">Document Chunks</h4>
+          <p class="text-xs text-slate-500 font-mono" id="modalDocSubtitle"></p>
+        </div>
+        <button onclick="closeChunkModal()" class="w-8 h-8 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center text-sm font-bold">
+          ✕
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4 custom-scroll" id="modalChunksContainer">
+        <!-- Chunks list loaded dynamically -->
+      </div>
+    </div>
+  </div>
 
-  <!-- App Script -->
+  <!-- User Auth Modal (Sign In / Sign Up) -->
+  <div id="authModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">🔐</span>
+          <div>
+            <h4 class="text-sm font-bold" id="authModalTitle">SaaS Studio Authentication</h4>
+            <p class="text-[11px] text-slate-400">Manage multiple client projects & bots</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <!-- Quick 1-Click Demo Login Banner -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-900 flex items-center justify-between">
+          <div>
+            <div class="font-bold">Instant Evaluation Account</div>
+            <div class="text-[11px] text-blue-700">admin@campus.edu • Password123</div>
+          </div>
+          <button type="button" onclick="quickDemoLogin()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow">
+            1-Click Login
+          </button>
+        </div>
+
+        <div class="flex border-b border-slate-200 text-xs font-semibold">
+          <button id="authTabSignIn" onclick="switchAuthTab('login')" class="pb-2 border-b-2 border-blue-600 text-blue-600 flex-1">Sign In</button>
+          <button id="authTabSignUp" onclick="switchAuthTab('register')" class="pb-2 border-b-2 border-transparent text-slate-500 flex-1">Create Account</button>
+        </div>
+
+        <form id="authForm" class="space-y-3.5">
+          <div id="authNameField" class="hidden">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+            <input type="text" id="authName" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="Dr. Sharma">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+            <input type="email" id="authEmail" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="name@company.com" required value="admin@campus.edu">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
+            <input type="password" id="authPassword" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="••••••••" required value="Password123">
+          </div>
+
+          <button type="submit" id="authSubmitBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-2.5 rounded-xl transition shadow">
+            Sign In
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create New Bot Modal -->
+  <div id="newProjectModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden">
+      <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">🚀</span>
+          <div>
+            <h4 class="text-sm font-bold">Create New Bot / Client Project</h4>
+            <p class="text-[11px] text-slate-400">Launch a dedicated RAG bot for any business</p>
+          </div>
+        </div>
+        <button onclick="closeNewProjectModal()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+
+      <form id="newProjectForm" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Bot / Project Name <span class="text-red-500">*</span></label>
+          <input type="text" id="newProjName" class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Trattoria Gourmet Menu Assistant" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Industry Preset</label>
+          <select id="newProjCategory" class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="college">🎓 College & Academic (Circulars, Timetables, Fee Notices)</option>
+            <option value="restaurant">🍕 Restaurant & Hospitality (Menus, Wine Lists, Dietary Tags)</option>
+            <option value="corporate">💼 Corporate & HR (Handbooks, Policies, SOPs, Leave Matrices)</option>
+            <option value="custom">⚙️ Custom Industry</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Short Description</label>
+          <input type="text" id="newProjDesc" class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Concierge for food orders and table inquiries">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeNewProjectModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold">Cancel</button>
+          <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl text-xs font-semibold shadow">Create Bot</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- FRONTEND SCRIPT LOGIC -->
+  <!-- ========================================================================= -->
   <script>
-    // Tab Switching
-    function switchTab(tabName) {
+    // State
+    let authToken = localStorage.getItem("rag_auth_token") || "";
+    let currentUser = null;
+    let projects = [];
+    let currentProjectId = "college-demo";
+    let currentProject = null;
+    let currentFile = null;
+    let activeAuthMode = "login";
+
+    // Dynamic API Base Resolution:
+    // If running on port 3000 -> use relative URL ""
+    // If running on a different port (e.g. 1277 Live Server, 5500, or file://) -> route to "http://localhost:3000"
+    const API_BASE = (window.location.port === "3000")
+      ? ""
+      : (window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? "http://localhost:3000"
+        : "";
+
+    /**
+     * Unified, robust API Request helper that:
+     * 1. Resolves against API_BASE (handling preview ports like 1277 smoothly)
+     * 2. Automatically attaches Bearer token if logged in
+     * 3. Safely inspects Content-Type, preventing Safari's "The string did not match the expected pattern" error
+     * 4. Throws clean human-readable error messages on failures
+     */
+    async function apiRequest(endpoint, options = {}) {
+      const fullUrl = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
+      const isFormData = options.body instanceof FormData;
+
+      const headers = isFormData
+        ? { ...(options.headers || {}) }
+        : { "Content-Type": "application/json", ...(options.headers || {}) };
+
+      if (authToken && !headers["Authorization"]) {
+        headers["Authorization"] = `Bearer ${authToken}`;
+      }
+
+      let res;
+      try {
+        res = await fetch(fullUrl, {
+          ...options,
+          headers,
+        });
+      } catch (networkErr) {
+        throw new Error(
+          `Unable to connect to backend at ${fullUrl}. Please ensure the Node server is running on port 3000 (${networkErr.message}).`
+        );
+      }
+
+      const contentType = res.headers.get("content-type") || "";
+      let data = null;
+
+      if (contentType.includes("application/json")) {
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+      } else {
+        const text = await res.text().catch(() => "");
+        if (!res.ok) {
+          throw new Error(
+            `Server returned HTTP ${res.status}: ${text.slice(0, 180) || res.statusText || "Endpoint not found"}`
+          );
+        }
+      }
+
+      if (!res.ok) {
+        const message = data?.error || data?.message || `Request failed with HTTP ${res.status}`;
+        throw new Error(message);
+      }
+
+      return data;
+    }
+
+    // Realistic Samples for Different Domains
+    const SAMPLES = {
+      college: {
+        filename: "Notice_End_Sem_Exam_Schedule_2024.md",
+        category: "Examinations",
+        content: `# NATIONAL INSTITUTE OF TECHNOLOGY
+## Office of the Dean (Academic Affairs)
+**Ref No:** NIT/ACAD/2024/EXAM-1102  
+**Date of Notification:** 14th November 2024  
+**Academic Session:** Autumn 2024-2025  
+
+## Subject: Schedule and Instructions for End-Semester Examinations (November-December 2024)
+
+All undergraduate (B.Tech) and postgraduate (M.Tech, MCA) students are hereby notified that the Autumn End-Semester Examinations for the Academic Year 2024-25 will commence from **25th November 2024 (Monday)**.
+
+### 1. Examination Timetable & Shifts
+
+The examinations will be conducted in two shifts across designated examination halls (Main Academic Block):
+- **Morning Shift (Shift A):** 09:30 AM to 12:30 PM
+- **Afternoon Shift (Shift B):** 02:00 PM to 05:00 PM
+
+| Date | Day | Shift | Course Code | Subject Name | Eligible Batches |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 25-11-2024 | Monday | Shift A | CS-301 | Database Management Systems | 3rd Year B.Tech (CSE, IT) |
+| 25-11-2024 | Monday | Shift B | EC-302 | Digital Signal Processing | 3rd Year B.Tech (ECE) |
+| 27-11-2024 | Wednesday | Shift A | CS-303 | Operating Systems & Kernel Dev | 3rd Year B.Tech (CSE, IT) |
+| 29-11-2024 | Friday | Shift A | CS-305 | Computer Networks | 3rd Year B.Tech (CSE) |
+| 02-12-2024 | Monday | Shift A | MA-201 | Discrete Mathematics | 2nd Year All Branches |
+| 04-12-2024 | Wednesday | Shift A | CS-401 | Artificial Intelligence & Machine Learning | 4th Year B.Tech |
+
+### 2. Mandatory Hall Ticket & Attendance Eligibility
+1. **Attendance Requirement:** In accordance with Institute Academic Ordinances, a minimum of **75% aggregate attendance** in each registered course is mandatory.
+2. **Admit Card Collection:** Printed Hall Tickets will be distributed by respective Department Offices from **19th to 22nd November 2024**.
+3. **Semester Fee Clearance Deadlines:** Students with pending tuition, hostel, or mess dues must clear their dues through the online portal on or before **20th November 2024**.
+
+### Signing Authority
+**Prof. R. K. Sharma**  
+Dean (Academic Affairs)  
+National Institute of Technology`
+      },
+      restaurant: {
+        filename: "Bella_Italia_Dinner_Menu_2025.md",
+        category: "Dinner Menu",
+        content: `# BELLA ITALIA RISTORANTE & WINE BAR
+## Authentic Artisan Italian Dining • Established 2012
+**Location:** 445 Grand Avenue, Downtown  
+**Reservations & Kitchen Timings:** Tue - Sun: 5:00 PM - 11:00 PM (Closed Mondays)
+
+## Antipasti & Appetizers
+
+### Bruschetta Pomodoro
+- **Price:** $14.50
+- **Ingredients:** Charred rustic sourdough, vine-ripened San Marzano tomatoes, garlic, extra virgin olive oil, fresh basil.
+- **Dietary:** **[Vegetarian]**, **[Vegan Option]**
+
+### Burrata Pugliese
+- **Price:** $18.00
+- **Ingredients:** Creamy pugliese burrata, 24-month prosciutto di Parma, wild baby arugula, aged balsamic reduction.
+- **Dietary:** **[Gluten-Free Available]**
+
+## Woodfired Artisanal Pizzas (12" Neapolitan Crust)
+
+### Margherita D.O.P.
+- **Price:** $19.00
+- **Ingredients:** San Marzano tomato sauce, fior di latte mozzarella, fresh basil, organic extra virgin olive oil.
+- **Dietary:** **[Vegetarian]**
+
+### Diavola Piccante
+- **Price:** $22.50
+- **Ingredients:** Spicy calabrese salami, crushed red pepper flakes, smoked provolone, wild oregano, chili-infused honey.
+- **Dietary:** **[Spicy Level: 2]**
+
+### Tartufo & Wild Funghi
+- **Price:** $24.00
+- **Ingredients:** Black truffle cream, sautéed porcini mushrooms, fontina cheese, fresh thyme.
+- **Dietary:** **[Vegetarian]**
+
+## Fresh Handmade Pastas
+
+| Dish Name | Sauce & Style | Price | Dietary Markers |
+| :--- | :--- | :--- | :--- |
+| Tagliolini al Tartufo | Butter, 24-month Parmigiano, shaved black winter truffle | $29.00 | **[Vegetarian]** |
+| Pappardelle al Cinghiale | Slow-braised Tuscan wild boar ragù, rosemary, juniper | $27.50 | **[Signature]** |
+| Ravioli di Zucca | Butternut squash filling, brown butter, crispy sage, amaretti crunch | $24.00 | **[Vegetarian]**, **[Contains Nuts]** |
+
+## Operating Info & Reservation Policy
+- Corkage fee is $30 per 750ml bottle (maximum 2 bottles per party).
+- Parties of 6 or more require advance booking via concierge and include 18% gratuity.`
+      },
+      corporate: {
+        filename: "Acme_Corp_Remote_Work_and_Leave_Policy_2025.md",
+        category: "HR Policy",
+        content: `# ACME GLOBAL TECHNOLOGIES
+## Human Resources Department • Global Operating Policy
+**Policy ID:** POL-HR-2025-04  
+**Version:** 3.2 (Approved by Executive Committee)  
+**Effective Date:** January 1, 2025  
+
+## Scope & Applicability
+This policy applies to all full-time regular employees, contractors, and interns across engineering, product, sales, and corporate operations.
+
+## Leave Entitlement Matrix (Annual Calendar)
+
+| Leave Category | Annual Allowance | Carryover Limit | Notice Period Required | Approval Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| Paid Time Off (PTO) | 22 Days | Max 5 days into Q1 | 5 business days advance | Direct Manager |
+| Sick & Wellness | 10 Days | Non-cumulative | Same-day notification by 9:00 AM | Self-certification |
+| Parental Leave | 16 Weeks | Taken within 12 months | 30 days written notice | HR Operations & VP |
+| Bereavement Leave | 5 Days | Immediate grant | As needed | Direct Manager |
+
+### Remote Work Guidelines
+1. **Core Collaboration Hours:** All team members must be reachable on Slack between **10:00 AM and 3:00 PM local time**.
+2. **Home Office Equipment Reimbursement:** Full-time staff receive a one-time setup stipend of **$1,000** for ergonomic desk, monitor, and chair upon joining.
+3. **Monthly Internet Stipend:** Acme reimburses up to **$75/month** for broadband internet on monthly expense reports.
+
+### Expense Approval & Submission Deadlines
+- Expense claims must be submitted via Concur by the **25th of each month**.
+- Receipts are mandatory for all business meals, travel, and client entertainment above $25.
+
+### HR Governance & Escalation Contacts
+- **HR Helpdesk:** hr-support@acmecorp.internal
+- **Ethics Helpline:** confidential-ethics@acmecorp.internal`
+      }
+    };
+
+    // Tab Navigation
+    function switchTab(tabId) {
       document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
-      document.querySelectorAll(".tab-btn").forEach(el => {
-        el.classList.remove("border-blue-500", "text-blue-400", "font-semibold");
-        el.classList.add("border-transparent", "text-slate-400");
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.remove("border-blue-500", "text-blue-400", "font-semibold");
+        btn.classList.add("border-transparent", "text-slate-400");
       });
 
-      const targetTab = document.getElementById("tab-" + tabName);
-      const targetBtn = document.getElementById("tabBtn-" + tabName);
-      if (targetTab) targetTab.classList.remove("hidden");
-      if (targetBtn) {
-        targetBtn.classList.add("border-blue-500", "text-blue-400", "font-semibold");
-        targetBtn.classList.remove("border-transparent", "text-slate-400");
+      const target = document.getElementById("tab-" + tabId);
+      const btn = document.getElementById("tabBtn-" + tabId);
+      if (target) target.classList.remove("hidden");
+      if (btn) {
+        btn.classList.add("border-blue-500", "text-blue-400", "font-semibold");
+        btn.classList.remove("border-transparent", "text-slate-400");
       }
 
-      if (tabName === "explorer") {
-        loadExplorerData();
+      if (tabId === "explorer") loadExplorerData();
+      if (tabId === "embed") updateSnippet();
+      if (tabId === "persona") loadSettingsTab();
+    }
+
+    // Auth Modal Handlers
+    function openAuthModal() { document.getElementById("authModal").classList.remove("hidden"); }
+    function closeAuthModal() { document.getElementById("authModal").classList.add("hidden"); }
+    function switchAuthTab(mode) {
+      activeAuthMode = mode;
+      document.getElementById("authTabSignIn").classList.toggle("border-blue-600", mode === "login");
+      document.getElementById("authTabSignIn").classList.toggle("text-blue-600", mode === "login");
+      document.getElementById("authTabSignUp").classList.toggle("border-blue-600", mode === "register");
+      document.getElementById("authTabSignUp").classList.toggle("text-blue-600", mode === "register");
+      document.getElementById("authNameField").classList.toggle("hidden", mode === "login");
+      document.getElementById("authSubmitBtn").textContent = mode === "login" ? "Sign In" : "Create Account";
+    }
+
+    async function quickDemoLogin() {
+      document.getElementById("authEmail").value = "admin@campus.edu";
+      document.getElementById("authPassword").value = "Password123";
+      await executeLogin("admin@campus.edu", "Password123");
+    }
+
+    document.getElementById("authForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value;
+      const name = document.getElementById("authName").value.trim();
+
+      if (activeAuthMode === "login") {
+        await executeLogin(email, password);
+      } else {
+        await executeRegister(email, password, name);
+      }
+    });
+
+    async function executeLogin(email, password) {
+      try {
+        const data = await apiRequest("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        });
+
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem("rag_auth_token", authToken);
+        closeAuthModal();
+        renderUserStatus();
+        await loadProjects();
+      } catch (err) {
+        alert("Authentication Error: " + err.message);
       }
     }
 
-    function switchResultTab(subTab) {
-      document.getElementById("resTab-chunks").classList.toggle("border-blue-600", subTab === "chunks");
-      document.getElementById("resTab-chunks").classList.toggle("text-blue-600", subTab === "chunks");
-      document.getElementById("resTab-chunks").classList.toggle("border-transparent", subTab !== "chunks");
-      document.getElementById("resTab-chunks").classList.toggle("text-slate-500", subTab !== "chunks");
+    async function executeRegister(email, password, name) {
+      try {
+        const data = await apiRequest("/api/auth/register", {
+          method: "POST",
+          body: JSON.stringify({ email, password, name }),
+        });
 
-      document.getElementById("resTab-markdown").classList.toggle("border-blue-600", subTab === "markdown");
-      document.getElementById("resTab-markdown").classList.toggle("text-blue-600", subTab === "markdown");
-      document.getElementById("resTab-markdown").classList.toggle("border-transparent", subTab !== "markdown");
-      document.getElementById("resTab-markdown").classList.toggle("text-slate-500", subTab !== "markdown");
-
-      document.getElementById("resView-chunks").classList.toggle("hidden", subTab !== "chunks");
-      document.getElementById("resView-markdown").classList.toggle("hidden", subTab !== "markdown");
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem("rag_auth_token", authToken);
+        closeAuthModal();
+        renderUserStatus();
+        await loadProjects();
+      } catch (err) {
+        alert("Registration Error: " + err.message);
+      }
     }
 
-    // Drag and Drop File Handlers
+    function renderUserStatus() {
+      const container = document.getElementById("authContainer");
+      if (currentUser) {
+        container.innerHTML = `
+          <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            <div class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px]">
+              ${(currentUser.name || "U")[0].toUpperCase()}
+            </div>
+            <div class="hidden md:block">
+              <span class="text-white font-medium">${currentUser.name || currentUser.email}</span>
+              <span class="bg-blue-500/20 text-blue-300 text-[9px] px-1.5 py-0.2 rounded uppercase ml-1">${currentUser.plan || "starter"}</span>
+            </div>
+            <button onclick="logout()" class="text-slate-400 hover:text-red-400 ml-1 text-xs" title="Sign Out">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <button onclick="openAuthModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-user-lock"></i> Sign In / Register
+          </button>
+        `;
+      }
+    }
+
+    function logout() {
+      authToken = "";
+      currentUser = null;
+      localStorage.removeItem("rag_auth_token");
+      renderUserStatus();
+      loadProjects();
+    }
+
+    // Projects Management
+    async function loadProjects() {
+      try {
+        const data = await apiRequest("/api/projects");
+        if (data && data.projects) {
+          projects = data.projects;
+        }
+      } catch (err) {
+        console.warn("Could not load user projects:", err);
+      }
+
+      const hasProjects = projects.length > 0;
+
+      // Show/hide empty state vs dashboard
+      document.getElementById("emptyState").classList.toggle("hidden", hasProjects);
+
+      // Show/hide the project selector strip & nav tabs in header
+      const projectStrip = document.getElementById("projectSelectorStrip");
+      const navTabs = document.getElementById("navTabs");
+      if (projectStrip) projectStrip.classList.toggle("hidden", !hasProjects);
+      if (navTabs) navTabs.classList.toggle("hidden", !hasProjects);
+
+      // Hide all tab content panels when no projects; restore on project load
+      if (!hasProjects) {
+        document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+        return; // nothing more to do
+      }
+      // Ensure upload tab is visible (switchTab restores active state)
+      switchTab("upload");
+
+      // Populate Select Dropdown
+      const select = document.getElementById("projectSelect");
+      select.innerHTML = "";
+
+      projects.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        const icon = p.category === "restaurant" ? "🍕" : p.category === "corporate" ? "💼" : "🎓";
+        opt.textContent = `${icon} ${p.name}`;
+        select.appendChild(opt);
+      });
+
+      // Maintain active project if possible
+      if (!projects.some(p => p.id === currentProjectId)) {
+        currentProjectId = projects[0]?.id || "";
+      }
+      select.value = currentProjectId;
+      await onProjectChanged();
+    }
+
+    document.getElementById("projectSelect").addEventListener("change", (e) => {
+      currentProjectId = e.target.value;
+      onProjectChanged();
+    });
+
+    async function onProjectChanged() {
+      currentProject = projects.find(p => p.id === currentProjectId) || null;
+
+      // Update Active Project Input
+      document.getElementById("activeProjectInput").value = currentProjectId;
+
+      // Update Category Badge & Domain Banner
+      const cat = currentProject?.category || "college";
+      const catBadge = document.getElementById("projectCategoryBadge");
+      catBadge.textContent = cat;
+
+      const domainTag = document.getElementById("domainTag");
+      const domainTitle = document.getElementById("domainTitle");
+      const domainSubtitle = document.getElementById("domainSubtitle");
+      const loadSampleBtnText = document.getElementById("loadSampleBtnText");
+
+      if (cat === "restaurant") {
+        domainTag.textContent = "Restaurant & Hospitality Ingestion";
+        domainTitle.textContent = "Menu, Wine List & Food Concierge Digitizer";
+        domainSubtitle.textContent = "Vision LLM dynamically extracts dishes, prices, ingredients, and tags **[Vegetarian]**, **[Gluten-Free]**, **[Spicy Level]** into clean semantic tables.";
+        loadSampleBtnText.textContent = "Load Realistic Sample Italian Menu & Wine List";
+        document.getElementById("docCategoryInput").value = "Dinner Menu";
+      } else if (cat === "corporate") {
+        domainTag.textContent = "Corporate & HR Policy Ingestion";
+        domainTitle.textContent = "Employee Handbook & SOP Digitizer";
+        domainSubtitle.textContent = "Vision LLM dynamically extracts leave matrices, approval chains, expense limits, and compliance rules into clean semantic tables.";
+        loadSampleBtnText.textContent = "Load Realistic Sample Remote Work & Leave Policy";
+        document.getElementById("docCategoryInput").value = "HR Policy";
+      } else {
+        domainTag.textContent = "College & Academic Ingestion";
+        domainTitle.textContent = "Scanned Notice, Exam & Circular Digitizer";
+        domainSubtitle.textContent = "Vision LLM dynamically extracts notice numbers, exam schedules, shifts, course codes, and fee deadlines into clean semantic tables.";
+        loadSampleBtnText.textContent = "Load Realistic Sample College Exam Notice";
+        document.getElementById("docCategoryInput").value = "Examinations";
+      }
+
+      // Update Bot Playground Header
+      const botAvatar = cat === "restaurant" ? "🍕" : cat === "corporate" ? "💼" : "🎓";
+      document.getElementById("chatBotAvatar").textContent = botAvatar;
+      document.getElementById("chatWelcomeAvatar").textContent = botAvatar;
+      document.getElementById("chatBotTitle").textContent = currentProject?.name || "AI Assistant";
+      document.getElementById("statTenantName").textContent = currentProject?.name || "State Institute of Technology";
+
+      // Render Suggested Chips for this category
+      renderChatChips(cat);
+      updateSnippet();
+    }
+
+    function renderChatChips(category) {
+      const chipsContainer = document.getElementById("chatSuggestedChips");
+      chipsContainer.innerHTML = "";
+      let chips = [];
+
+      if (category === "restaurant") {
+        chips = [
+          "What vegetarian or vegan options do you have?",
+          "How much does the Truffle Pizza cost?",
+          "What is your corkage fee and reservation policy?"
+        ];
+      } else if (category === "corporate") {
+        chips = [
+          "How many annual PTO days do employees receive?",
+          "What is the reimbursement limit for home office setup?",
+          "What are the core collaboration hours?"
+        ];
+      } else {
+        chips = [
+          "When do the end-semester examinations begin?",
+          "What is the schedule for Database Management Systems?",
+          "What is the minimum attendance requirement?"
+        ];
+      }
+
+      chips.forEach(q => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg text-[11px] font-medium transition text-left";
+        chip.textContent = q;
+        chip.onclick = () => {
+          document.getElementById("chatQueryInput").value = q;
+          document.getElementById("chatForm").dispatchEvent(new Event("submit"));
+        };
+        chipsContainer.appendChild(chip);
+      });
+    }
+
+    // New Project Modal Handlers
+    function openNewProjectModal(presetCategory) {
+      document.getElementById("newProjectModal").classList.remove("hidden");
+      // Pre-select category if passed from empty-state cards
+      if (presetCategory) {
+        const catSelect = document.getElementById("newProjCategory");
+        if (catSelect) catSelect.value = presetCategory;
+      }
+    }
+    function closeNewProjectModal() { document.getElementById("newProjectModal").classList.add("hidden"); }
+
+    document.getElementById("newProjectForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("newProjName").value.trim();
+      const category = document.getElementById("newProjCategory").value;
+      const description = document.getElementById("newProjDesc").value.trim();
+
+      try {
+        const data = await apiRequest("/api/projects", {
+          method: "POST",
+          body: JSON.stringify({ name, category, description }),
+        });
+
+        closeNewProjectModal();
+        currentProjectId = data.project.id;
+        await loadProjects();
+        // Switch to upload tab so user can immediately add documents
+        switchTab("upload");
+        alert(`🎉 Bot "${name}" created! Now upload your first document to teach it.`);
+      } catch (err) {
+        alert("Create Project Error: " + err.message);
+      }
+    });
+
+    // File DropZone & Selection Handlers
     const dropZone = document.getElementById("dropZone");
     const fileInput = document.getElementById("fileInput");
     const selectedFileInfo = document.getElementById("selectedFileInfo");
@@ -681,10 +1355,7 @@
     const selectedFileSize = document.getElementById("selectedFileSize");
     const removeFileBtn = document.getElementById("removeFileBtn");
 
-    let currentFile = null;
-
     dropZone.addEventListener("click", (e) => {
-      // Don't open file picker if user clicked the remove button
       if (e.target.closest("#removeFileBtn")) return;
       fileInput.click();
     });
@@ -732,66 +1403,17 @@
       selectedFileInfo.classList.remove("flex");
     });
 
-    // Realistic Sample Notice Loader
-    const sampleNoticeMarkdown = `# NATIONAL INSTITUTE OF TECHNOLOGY
-## Office of the Dean (Academic Affairs)
-**Ref No:** NIT/ACAD/2024/EXAM-1102  
-**Date of Notification:** 14th November 2024  
-**Academic Session:** Autumn 2024-2025  
-
-## Subject: Schedule and Instructions for End-Semester Examinations (November-December 2024)
-
-All undergraduate (B.Tech) and postgraduate (M.Tech, MCA) students are hereby notified that the Autumn End-Semester Examinations for the Academic Year 2024-25 will commence from **25th November 2024 (Monday)**.
-
-### 1. Examination Timetable & Shifts
-
-The examinations will be conducted in two shifts across designated examination halls (Main Academic Block):
-- **Morning Shift (Shift A):** 09:30 AM to 12:30 PM
-- **Afternoon Shift (Shift B):** 02:00 PM to 05:00 PM
-
-| Date | Day | Shift | Course Code | Subject Name | Eligible Batches |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 25-11-2024 | Monday | Shift A | CS-301 | Database Management Systems | 3rd Year B.Tech (CSE, IT) |
-| 25-11-2024 | Monday | Shift B | EC-302 | Digital Signal Processing | 3rd Year B.Tech (ECE) |
-| 27-11-2024 | Wednesday | Shift A | CS-303 | Operating Systems & Kernel Dev | 3rd Year B.Tech (CSE, IT) |
-| 29-11-2024 | Friday | Shift A | CS-305 | Computer Networks | 3rd Year B.Tech (CSE) |
-| 02-12-2024 | Monday | Shift A | MA-201 | Discrete Mathematics | 2nd Year All Branches |
-| 04-12-2024 | Wednesday | Shift A | CS-401 | Artificial Intelligence & Machine Learning | 4th Year B.Tech |
-
-### 2. Mandatory Hall Ticket & Attendance Eligibility
-1. **Attendance Requirement:** In accordance with Institute Academic Ordinances, a minimum of **75% aggregate attendance** in each registered course is mandatory to appear for the end-semester examinations.
-2. Students with attendance between 65% and 74% with valid medical grounds must submit verified hospital certificates to the Dean Academic Office by **18th November 2024**.
-3. **Admit Card Collection:** Printed Hall Tickets will be distributed by respective Department Offices from **19th to 22nd November 2024**. No student will be permitted entry without the official admit card and Institute Photo Identity Card.
-
-### 3. Semester Fee Clearance Deadlines
-Students with pending tuition, hostel, or mess dues must clear their dues through the online portal on or before **20th November 2024**. Hall tickets will be withheld for students with uncleared balances.
-
-### 4. Examination Hall Regulations
-- Entry into the exam hall will close strictly 15 minutes after the scheduled commencement time.
-- Programmable calculators, smartwatches, mobile phones, and electronic gadgets are strictly banned inside examination halls.
-- Any violation will be treated as Unfair Means (UFM) and referred to the Institute Discipline Committee.
-
-### Signing Authority
-**Prof. R. K. Sharma**  
-Dean (Academic Affairs)  
-National Institute of Technology  
-
-**Copy to:**
-1. Director's Secretariat for kind information
-2. All Heads of Departments (CSE, ECE, EE, ME, Civil)
-3. Controller of Examinations
-4. Chief Warden for hostel notice boards
-5. Institute Webmaster for portal upload`;
-
+    // Load Realistic Sample Document for Active Project
     document.getElementById("loadSampleBtn").addEventListener("click", () => {
-      const blob = new Blob([sampleNoticeMarkdown], { type: "text/markdown" });
-      const sampleFile = new File([blob], "Notice_End_Sem_Exam_Schedule_2024.md", { type: "text/markdown" });
+      const cat = currentProject?.category || "college";
+      const sample = SAMPLES[cat] || SAMPLES.college;
+      const blob = new Blob([sample.content], { type: "text/markdown" });
+      const sampleFile = new File([blob], sample.filename, { type: "text/markdown" });
       handleFileSelect(sampleFile);
-      document.getElementById("categoryInput").value = "Examinations";
-      document.getElementById("strategyInput").value = "vision_llm";
+      document.getElementById("docCategoryInput").value = sample.category;
     });
 
-    // Form Submissions
+    // Form Submissions (Ingestion & Preview)
     const uploadForm = document.getElementById("uploadForm");
     const previewBtn = document.getElementById("previewBtn");
     const progressEl = document.getElementById("pipelineProgress");
@@ -809,7 +1431,6 @@ National Institute of Technology
         document.getElementById("pipelineTimer").textContent = seconds + "s";
       }, 1000);
 
-      // Animate steps sequentially
       setTimeout(() => updateProgressStep(2), 600);
       setTimeout(() => updateProgressStep(3), 1600);
       setTimeout(() => updateProgressStep(4), 2600);
@@ -838,16 +1459,15 @@ National Institute of Technology
       setTimeout(() => progressEl.classList.add("hidden"), 1000);
     }
 
-    // Handle Upload & Full Ingestion
+    // Ingest into Database
     uploadForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!currentFile) {
-        alert("Please select a notice file or click 'Load Realistic Sample Notice'!");
+        alert("Please select a document file or click 'Load Realistic Sample'!");
         return;
       }
 
-      const kbId = document.getElementById("kbIdInput").value.trim() || "college-notices";
-      const category = document.getElementById("categoryInput").value;
+      const category = document.getElementById("docCategoryInput").value.trim();
       const strategy = document.getElementById("strategyInput").value;
 
       const formData = new FormData();
@@ -859,19 +1479,12 @@ National Institute of Technology
       document.getElementById("uploadSubmitBtn").disabled = true;
 
       try {
-        const res = await fetch(`/api/knowledge-bases/${encodeURIComponent(kbId)}/documents`, {
+        const data = await apiRequest(`/api/projects/${encodeURIComponent(currentProjectId)}/documents`, {
           method: "POST",
           body: formData,
         });
 
         stopProgressVisualizer();
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `Upload failed with status ${res.status}`);
-        }
-
-        const data = await res.json();
         renderResult(data, false);
       } catch (err) {
         stopProgressVisualizer();
@@ -881,39 +1494,30 @@ National Institute of Technology
       }
     });
 
-    // Handle Preview Only
+    // Preview Markdown Only (No DB Write)
     previewBtn.addEventListener("click", async () => {
       if (!currentFile) {
-        alert("Please select a notice file first!");
+        alert("Please select a document file first!");
         return;
       }
 
-      const kbId = document.getElementById("kbIdInput").value.trim() || "college-notices";
-      const category = document.getElementById("categoryInput").value;
+      const category = document.getElementById("docCategoryInput").value.trim();
       const strategy = document.getElementById("strategyInput").value;
 
       const formData = new FormData();
       formData.append("file", currentFile);
-      formData.append("knowledgeBaseId", kbId);
       formData.append("category", category);
       formData.append("strategy", strategy);
 
       startProgressVisualizer();
 
       try {
-        const res = await fetch(`/api/preview`, {
+        const data = await apiRequest(`/api/projects/${encodeURIComponent(currentProjectId)}/preview`, {
           method: "POST",
           body: formData,
         });
 
         stopProgressVisualizer();
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `Preview failed with status ${res.status}`);
-        }
-
-        const data = await res.json();
         renderResult(data, true);
       } catch (err) {
         stopProgressVisualizer();
@@ -926,22 +1530,20 @@ National Institute of Technology
       resultInspector.scrollIntoView({ behavior: "smooth" });
 
       document.getElementById("resultTitle").textContent = isPreview
-        ? "Notice Preview Generated (Dry-Run)"
-        : "Notice Ingested & Chunks Stored in MongoDB!";
+        ? "Document Preview Generated (Dry-Run)"
+        : "Document Ingested & Chunks Stored in MongoDB!";
 
       document.getElementById("resultSubtitle").textContent = isPreview
         ? `Generated ${data.chunkCount || (data.chunks ? data.chunks.length : 0)} chunks for ${data.fileName}. (Not saved to DB)`
         : `Successfully stored ${data.chunkCount} chunks in MongoDB for "${data.title || data.fileName}".`;
 
       document.getElementById("resChunkCount").textContent = data.chunkCount || (data.chunks ? data.chunks.length : 0);
-      document.getElementById("resultStrategyBadge").textContent = `Parser: ${data.strategyUsed || "LLM Vision"}`;
+      document.getElementById("resultStrategyBadge").textContent = `Parser: ${data.strategyUsed || "Domain Vision LLM"}`;
 
-      // Markdown Views
       const md = data.markdown || "";
       document.getElementById("markdownRaw").textContent = md;
       document.getElementById("markdownRendered").innerHTML = marked.parse(md);
 
-      // Render Chunks Cards
       const container = document.getElementById("chunksListContainer");
       container.innerHTML = "";
 
@@ -984,6 +1586,21 @@ National Institute of Technology
       });
     }
 
+    function switchResultTab(subTab) {
+      document.getElementById("resTab-chunks").classList.toggle("border-blue-600", subTab === "chunks");
+      document.getElementById("resTab-chunks").classList.toggle("text-blue-600", subTab === "chunks");
+      document.getElementById("resTab-chunks").classList.toggle("border-transparent", subTab !== "chunks");
+      document.getElementById("resTab-chunks").classList.toggle("text-slate-500", subTab !== "chunks");
+
+      document.getElementById("resTab-markdown").classList.toggle("border-blue-600", subTab === "markdown");
+      document.getElementById("resTab-markdown").classList.toggle("text-blue-600", subTab === "markdown");
+      document.getElementById("resTab-markdown").classList.toggle("border-transparent", subTab !== "markdown");
+      document.getElementById("resTab-markdown").classList.toggle("text-slate-500", subTab !== "markdown");
+
+      document.getElementById("resView-chunks").classList.toggle("hidden", subTab !== "chunks");
+      document.getElementById("resView-markdown").classList.toggle("hidden", subTab !== "markdown");
+    }
+
     function escapeHtml(text) {
       const div = document.createElement("div");
       div.textContent = text;
@@ -997,36 +1614,34 @@ National Institute of Technology
       });
     });
 
-    // =========================================================================
-    // TAB 2: EXPLORER LOGIC
-    // =========================================================================
+    // Explorer Table Logic
     async function loadExplorerData() {
       const tbody = document.getElementById("noticesTableBody");
       tbody.innerHTML = `
         <tr>
           <td colspan="5" class="py-8 text-center text-slate-400">
-            <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading notices from database...
+            <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading indexed documents from MongoDB...
           </td>
         </tr>
       `;
 
       try {
         const [docsRes, statsRes] = await Promise.all([
-          fetch("/api/documents").then(r => r.json()),
-          fetch("/api/stats").then(r => r.json()).catch(() => ({})),
+          apiRequest(`/api/projects/${encodeURIComponent(currentProjectId)}/documents`),
+          apiRequest(`/api/projects/${encodeURIComponent(currentProjectId)}`).catch(() => ({})),
         ]);
 
-        // Update Stats
-        document.getElementById("statTotalDocs").textContent = statsRes.totalDocuments ?? (docsRes.documents ? docsRes.documents.length : 0);
-        document.getElementById("statTotalChunks").textContent = statsRes.totalChunks ?? 0;
-        document.getElementById("statTotalKbs").textContent = statsRes.knowledgeBases ? statsRes.knowledgeBases.length : 1;
+        const stats = statsRes?.project?.stats || {};
+        const docs = docsRes?.documents || [];
 
-        const docs = docsRes.documents || [];
+        document.getElementById("statTotalDocs").textContent = stats.documentCount ?? docs.length;
+        document.getElementById("statTotalChunks").textContent = stats.chunkCount ?? 0;
+
         if (docs.length === 0) {
           tbody.innerHTML = `
             <tr>
               <td colspan="5" class="py-8 text-center text-slate-400">
-                No college notices uploaded yet. <a href="#" onclick="switchTab('upload')" class="text-blue-600 underline font-semibold">Upload your first notice!</a>
+                No documents uploaded for this bot yet. <a href="#" onclick="switchTab('upload')" class="text-blue-600 underline font-semibold">Upload your first document!</a>
               </td>
             </tr>
           `;
@@ -1045,7 +1660,7 @@ National Institute of Technology
               <div class="text-[11px] text-slate-400 font-mono">${escapeHtml(doc.fileName)}</div>
             </td>
             <td class="py-3 px-4">
-              <span class="bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded text-[11px]">
+              <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] border border-slate-200">
                 ${escapeHtml(doc.category || "General")}
               </span>
             </td>
@@ -1071,7 +1686,7 @@ National Institute of Technology
         tbody.innerHTML = `
           <tr>
             <td colspan="5" class="py-6 text-center text-red-500">
-              Failed to load notices: ${err.message}
+              Failed to load documents: ${err.message}
             </td>
           </tr>
         `;
@@ -1080,15 +1695,14 @@ National Institute of Technology
 
     async function inspectDocChunks(docId, title) {
       document.getElementById("modalDocTitle").textContent = title;
-      document.getElementById("modalDocSubtitle").textContent = `Document ID: ${docId}`;
+      document.getElementById("modalDocSubtitle").textContent = `Document ID: ${docId} • Project: ${currentProjectId}`;
       const container = document.getElementById("modalChunksContainer");
       container.innerHTML = `<div class="text-center py-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading chunks from MongoDB...</div>`;
       document.getElementById("chunkModal").classList.remove("hidden");
 
       try {
-        const res = await fetch(`/api/documents/${docId}/chunks`);
-        const data = await res.json();
-        const chunks = data.chunks || [];
+        const data = await apiRequest(`/api/projects/${encodeURIComponent(currentProjectId)}/documents/${encodeURIComponent(docId)}/chunks`);
+        const chunks = data?.chunks || [];
 
         if (chunks.length === 0) {
           container.innerHTML = `<div class="text-center py-8 text-slate-400">No chunks found for this document.</div>`;
@@ -1099,7 +1713,7 @@ National Institute of Technology
         chunks.forEach((chunk, i) => {
           const div = document.createElement("div");
           div.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2";
-          const path = chunk.headingPath ? chunk.headingPath.join(" &gt; ") : "Section";
+          const path = chunk.headingPath ? chunk.headingPath.join(" &gt; ") : "Root";
 
           div.innerHTML = `
             <div class="flex items-center justify-between text-xs font-bold text-slate-700">
@@ -1123,94 +1737,73 @@ National Institute of Technology
     }
 
     async function deleteDoc(docId, title) {
-      if (!confirm(`Are you sure you want to delete "${title}" and all its chunks from the database?`)) {
-        return;
-      }
+      if (!confirm(`Are you sure you want to delete "${title}" and all its chunks from the database?`)) return;
+
       try {
-        const res = await fetch(`/api/documents/${docId}`, { method: "DELETE" });
-        if (res.ok) {
-          loadExplorerData();
-        } else {
-          alert("Failed to delete document.");
-        }
+        await apiRequest(`/api/projects/${encodeURIComponent(currentProjectId)}/documents/${encodeURIComponent(docId)}`, {
+          method: "DELETE",
+        });
+        loadExplorerData();
       } catch (err) {
         alert("Delete failed: " + err.message);
       }
     }
 
-    // =========================================================================
-    // TAB 3: CHATBOT LOGIC
-    // =========================================================================
+    // Bot Playground Chat Logic
     const chatForm = document.getElementById("chatForm");
     const chatQueryInput = document.getElementById("chatQueryInput");
     const chatMessages = document.getElementById("chatMessages");
     const chatClearBtn = document.getElementById("chatClearBtn");
 
-    function askChatSample(text) {
-      chatQueryInput.value = text;
-      handleChatSubmit();
-    }
-
     chatClearBtn.addEventListener("click", () => {
+      const avatar = currentProject?.category === "restaurant" ? "🍕" : currentProject?.category === "corporate" ? "💼" : "🎓";
       chatMessages.innerHTML = `
         <div class="flex gap-3 max-w-2xl">
-          <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm flex-shrink-0">🤖</div>
-          <div class="bg-white border border-slate-200 rounded-2xl p-4 text-xs text-slate-800 shadow-sm">
-            Chat cleared! Ask me anything about the college notices.
+          <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm flex-shrink-0">
+            ${avatar}
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 text-xs shadow-sm text-slate-800 leading-relaxed">
+            <div>Hello! I am your AI Assistant. Ask me anything about this knowledge base.</div>
+            <div class="mt-3 flex flex-wrap gap-2" id="chatSuggestedChips"></div>
           </div>
         </div>
       `;
+      renderChatChips(currentProject?.category || "college");
     });
 
-    chatForm.addEventListener("submit", (e) => {
+    chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      handleChatSubmit();
-    });
+      const query = chatQueryInput.value.trim();
+      if (!query) return;
 
-    async function handleChatSubmit() {
-      const q = chatQueryInput.value.trim();
-      if (!q) return;
-
-      // Append User message
-      appendChatMessage(q, "user");
+      appendChatMessage(query, "user");
       chatQueryInput.value = "";
 
-      // Show typing
       const typingId = "typing-" + Date.now();
       const typingEl = document.createElement("div");
       typingEl.id = typingId;
-      typingEl.className = "flex gap-3 max-w-2xl";
-      typingEl.innerHTML = `
-        <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm flex-shrink-0">🤖</div>
-        <div class="bg-white border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-500 shadow-sm flex items-center gap-2">
-          <i class="fa-solid fa-spinner fa-spin text-blue-600"></i> Searching notice vector index & generating answer...
-        </div>
-      `;
+      typingEl.className = "flex gap-3 max-w-2xl items-center text-slate-400 text-xs italic";
+      typingEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-500"></i> Searching knowledge base and generating answer...`;
       chatMessages.appendChild(typingEl);
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
       try {
-        const kbId = document.getElementById("chatKbSelect").value || "college-notices";
-        const res = await fetch("/api/chat", {
+        const data = await apiRequest("/api/v1/chat", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: q, knowledgeBaseId: kbId }),
+          body: JSON.stringify({
+            query,
+            projectId: currentProjectId,
+            token: currentProject?.credentials?.publicToken,
+          }),
         });
 
         document.getElementById(typingId)?.remove();
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `Error ${res.status}`);
-        }
-
-        const data = await res.json();
         appendChatMessage(data.answer, "bot", data.sources);
       } catch (err) {
         document.getElementById(typingId)?.remove();
         appendChatMessage(`⚠️ Could not complete query: ${err.message}`, "bot");
       }
-    }
+    });
 
     function appendChatMessage(text, role, sources = []) {
       const row = document.createElement("div");
@@ -1220,7 +1813,7 @@ National Institute of Technology
       avatar.className = `w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0 ${
         role === "user" ? "bg-slate-800 text-white" : "bg-blue-600 text-white"
       }`;
-      avatar.textContent = role === "user" ? "👤" : "🤖";
+      avatar.textContent = role === "user" ? "👤" : (currentProject?.category === "restaurant" ? "🍕" : currentProject?.category === "corporate" ? "💼" : "🎓");
 
       const bubble = document.createElement("div");
       bubble.className = `rounded-2xl p-4 text-xs shadow-sm leading-relaxed ${
@@ -1237,7 +1830,7 @@ National Institute of Technology
         sources.forEach((s) => {
           sourcesHtml += `
             <div class="bg-slate-50 p-2 rounded border border-slate-200">
-              <div class="font-bold text-slate-800">${escapeHtml(s.source || "Notice")}</div>
+              <div class="font-bold text-slate-800">${escapeHtml(s.source || "Knowledge Document")}</div>
               <div class="text-[10px] text-slate-500">${escapeHtml(s.headingPath ? s.headingPath.join(" > ") : "")}</div>
               <div class="text-slate-600 mt-1 italic font-sans text-[10.5px]">"${escapeHtml((s.content || "").slice(0, 160))}..."</div>
             </div>
@@ -1254,27 +1847,73 @@ National Institute of Technology
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // =========================================================================
-    // TAB 4: EMBED SNIPPET GENERATOR
-    // =========================================================================
-    function updateSnippet() {
-      const title = document.getElementById("cfgTitle").value.trim() || "College Notice Assistant";
-      const kb = document.getElementById("cfgKb").value.trim() || "college-notices";
-      const color = document.getElementById("cfgColor").value;
-      const api = document.getElementById("cfgApi").value.trim();
+    // Persona & Ingestion Settings Tab
+    async function loadSettingsTab() {
+      try {
+        const data = await apiRequest(`/api/projects/${encodeURIComponent(currentProjectId)}`);
+        if (data && data.project) {
+          const p = data.project;
+          document.getElementById("settingBotName").value = p.name || "";
+          document.getElementById("settingBotCategory").value = p.category || "college";
+          document.getElementById("settingIngestionPrompt").value = p.ingestionPrompt || "";
+          document.getElementById("settingSystemPrompt").value = p.aiPersona?.systemPrompt || "";
+        }
+      } catch (err) {
+        console.warn("Could not load project settings:", err);
+      }
+    }
 
+    document.getElementById("settingsForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("settingBotName").value.trim();
+      const category = document.getElementById("settingBotCategory").value;
+      const ingestionPrompt = document.getElementById("settingIngestionPrompt").value.trim();
+      const systemPrompt = document.getElementById("settingSystemPrompt").value.trim();
+
+      try {
+        await apiRequest(`/api/projects/${encodeURIComponent(currentProjectId)}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            name,
+            category,
+            ingestionPrompt,
+            aiPersona: {
+              ...(currentProject?.aiPersona || {}),
+              systemPrompt,
+            },
+          }),
+        });
+
+        alert("Settings saved successfully!");
+        await loadProjects();
+      } catch (err) {
+        alert("Settings Error: " + err.message);
+      }
+    });
+
+    // Embed Snippet Generator
+    function updateSnippet() {
+      const title = document.getElementById("cfgTitle").value.trim() || currentProject?.name || "AI Assistant";
+      const color = document.getElementById("cfgColor").value;
       document.getElementById("colorHexText").textContent = color;
 
-      const origin = api || window.location.origin;
-      const code = '<!-- College Notice AI Chatbot Widget -->\n' +
-        '<script \n' +
+      const token = currentProject?.credentials?.publicToken || "pk_live_" + currentProjectId;
+      document.getElementById("cfgToken").value = token;
+
+      const origin = API_BASE || window.location.origin;
+      const scriptTagOpen = '<' + 'script';
+      const scriptTagClose = '<' + '/script>';
+
+      const code = '<!-- OmniRAG Universal Chatbot Widget -->\n' +
+        scriptTagOpen + ' \n' +
         '  src="' + origin + '/widget.js" \n' +
-        '  data-api="' + api + '" \n' +
-        '  data-kb="' + kb + '" \n' +
+        '  data-api="' + origin + '" \n' +
+        '  data-project-id="' + currentProjectId + '" \n' +
+        '  data-token="' + token + '" \n' +
         '  data-title="' + title + '" \n' +
         '  data-color="' + color + '"\n' +
         '  defer>\n' +
-        '<' + '/script>';
+        scriptTagClose;
 
       document.getElementById("snippetCode").textContent = code;
     }
@@ -1288,18 +1927,55 @@ National Institute of Technology
       });
     }
 
-    // Init snippet on load
-    updateSnippet();
+    // App Initialization
+    async function initApp() {
+      // 1. Verify health
+      apiRequest("/health").then(data => {
+        if (data && data.status === "ok") {
+          document.getElementById("headerStatusText").textContent = "Online";
+        }
+      }).catch(() => {
+        document.getElementById("headerStatusText").textContent = "Offline";
+      });
 
-    // Check health on load
-    fetch("/health").then(r => r.json()).then(data => {
-      if (data.status === "ok") {
-        document.getElementById("headerStatusText").textContent = "Online";
+      // 2. Check existing token or perform auto demo login
+      if (authToken) {
+        try {
+          const data = await apiRequest("/api/auth/me");
+          if (data && data.user) {
+            currentUser = data.user;
+          } else {
+            authToken = "";
+            localStorage.removeItem("rag_auth_token");
+          }
+        } catch {
+          authToken = "";
+          localStorage.removeItem("rag_auth_token");
+        }
       }
-    }).catch(() => {
-      document.getElementById("headerStatusText").textContent = "Connecting...";
-    });
 
+      // If no valid user token, auto-login with demo account for instant out-of-the-box evaluation
+      if (!authToken) {
+        try {
+          const data = await apiRequest("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ email: "admin@campus.edu", password: "Password123" }),
+          });
+          if (data && data.token) {
+            authToken = data.token;
+            currentUser = data.user;
+            localStorage.setItem("rag_auth_token", authToken);
+          }
+        } catch (e) {
+          console.warn("Auto demo login:", e.message);
+        }
+      }
+
+      renderUserStatus();
+      await loadProjects();
+    }
+
+    initApp();
   </script>
 
 </body>
