@@ -90,7 +90,32 @@ export async function convertFileToMarkdown(
     );
   }
 
-  // Direct Node.js fallback 1: OpenAI Vision if OPENAI_API_KEY is configured
+  // Direct Node.js fallback 1: Gemini Vision (recommended for production — free tier)
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  if (geminiKey && (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".webp" || ext === ".pdf")) {
+    try {
+      const { geminiConvertImageToMarkdown } = await import("../llm/gemini-client.js");
+      const md = await geminiConvertImageToMarkdown(
+        file.buffer,
+        file.mimetype || "image/jpeg",
+        customPrompt,
+        file.originalname
+      );
+      if (md) {
+        return {
+          fileName: file.originalname,
+          mimeType: file.mimetype,
+          markdown: md,
+          strategy: "direct_node:gemini_vision",
+          pageCount: 1,
+        };
+      }
+    } catch (err: any) {
+      console.warn("Direct Gemini vision fallback failed:", err.message);
+    }
+  }
+
+  // Direct Node.js fallback 2: OpenAI Vision if OPENAI_API_KEY is configured
   const openAiKey = process.env.OPENAI_API_KEY;
   if (openAiKey && (ext === ".png" || ext === ".jpg" || ext === ".jpeg" || ext === ".webp")) {
     try {
@@ -182,7 +207,7 @@ export async function convertFileToMarkdown(
 
   throw new Error(
     `Document conversion failed for "${file.originalname}". ` +
-    `Please ensure the embedding-service is running (cd embedding-service && uvicorn main:app --port 8000) ` +
-    `or configure an LLM vision provider (OPENAI_API_KEY or local Ollama).`
+    `Configure GEMINI_API_KEY (recommended), OPENAI_API_KEY, start local Ollama, ` +
+    `or run the embedding-service (cd embedding-service && uvicorn main:app --port 8000).`
   );
 }
