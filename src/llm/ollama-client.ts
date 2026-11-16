@@ -45,8 +45,16 @@ export class OllamaClient {
       preferredProvider === "gemini"
         ? ["gemini", "ollama"]
         : ["ollama", "gemini"];
+    const debug = process.env.LLM_DEBUG?.trim().toLowerCase() === "true";
+    if (debug) {
+      console.info(
+        `[LLM] Provider order: ${providerOrder.join(" -> ")}; ` +
+        `Gemini configured=${isGeminiConfigured()}.`
+      );
+    }
 
     for (const provider of providerOrder) {
+      if (debug) console.info(`[LLM] Trying ${provider}.`);
       if (provider === "ollama") {
         try {
           const response = await fetch(`${this.baseUrl}/api/generate`, {
@@ -59,6 +67,7 @@ export class OllamaClient {
           if (response.ok) {
             const data: OllamaResponse = await response.json();
             if (data.response?.trim()) {
+              if (debug) console.info("[LLM] Ollama returned a response.");
               return data.response;
             }
           }
@@ -72,8 +81,8 @@ export class OllamaClient {
         try {
           const text = await geminiGenerate(prompt);
           if (text.trim()) return text;
-        } catch (err: any) {
-          console.warn("Gemini generation fallback error:", err.message);
+        } catch {
+          console.warn("[Gemini] Generation failed; continuing with fallback providers.");
         }
       }
     }

@@ -21,6 +21,19 @@ import { GoogleGenAI } from "@google/genai";
 const DEFAULT_VISION_MODEL = "gemini-2.0-flash";
 const DEFAULT_CHAT_MODEL   = "gemini-2.0-flash";
 
+function isLlmDebugEnabled(): boolean {
+  return process.env.LLM_DEBUG?.trim().toLowerCase() === "true";
+}
+
+function describeGeminiError(error: unknown): string {
+  const details =
+    error instanceof Error
+      ? `${error.name}: ${error.message}`
+      : String(error);
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  return apiKey ? details.replaceAll(apiKey, "[REDACTED]") : details;
+}
+
 function buildClient(): GoogleGenAI | null {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) return null;
@@ -72,14 +85,39 @@ export async function geminiGenerate(prompt: string): Promise<string> {
   if (!ai) throw new Error("GEMINI_API_KEY is not set.");
 
   const model = process.env.GEMINI_CHAT_MODEL || DEFAULT_CHAT_MODEL;
+  const debug = isLlmDebugEnabled();
+  const startedAt = Date.now();
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    config: { temperature: 0.2 },
-  });
+  if (debug) {
+    console.info(`[Gemini] Request started (model=${model}).`);
+  }
 
-  return response.text ?? "";
+  try {
+    const response = await ai.models.generateContent({
+      model,
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: { temperature: 0.2 },
+    });
+
+    const text = response.text ?? "";
+    if (debug) {
+      console.info(
+        `[Gemini] Request succeeded (model=${model}, elapsedMs=${Date.now() - startedAt}, ` +
+        `textChars=${text.length}, finishReason=${response.candidates?.[0]?.finishReason ?? "unknown"}, ` +
+        `inputTokens=${response.usageMetadata?.promptTokenCount ?? "unknown"}, ` +
+        `outputTokens=${response.usageMetadata?.candidatesTokenCount ?? "unknown"}).`
+      );
+    }
+    return text;
+  } catch (error) {
+    if (debug) {
+      console.error(
+        `[Gemini] Request failed (model=${model}, elapsedMs=${Date.now() - startedAt}): ` +
+        describeGeminiError(error)
+      );
+    }
+    throw error;
+  }
 }
 
 // ─── Availability check ───────────────────────────────────────────────────────
